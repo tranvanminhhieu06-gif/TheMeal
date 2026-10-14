@@ -1,0 +1,15 @@
+{
+  "name": "themeal-shop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Website thương mại điện tử the.Meal — Meal Ring Active, Meal Ring Active Pro, Meal Fit Insight",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
