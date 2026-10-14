@@ -25,6 +25,11 @@ app.use((req, res, next) => {
   res.set({ 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'strict-origin-when-cross-origin', 'X-Frame-Options': 'SAMEORIGIN' });
   next();
 });
+app.use((req, res, next) => {
+  if (req.url === '/project20') return res.redirect(301, '/project20/');
+  if (req.url.startsWith('/project20/')) req.url = req.url.slice(10);
+  next();
+});
 app.use(express.static(path.join(__dirname, 'public'), { maxAge: process.env.NODE_ENV === 'production' ? '7d' : 0 }));
 
 /* ---------- Simple in-memory rate limit for POST APIs ---------- */

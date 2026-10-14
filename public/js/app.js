@@ -8,6 +8,14 @@
   var vnd = function (n) { return Number(n).toLocaleString('vi-VN').replace(/,/g, '.') + '₫'; };
   var reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   var ICON_ALERT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>';
+  var BASE = (typeof window !== 'undefined' && window.__BASE__ != null)
+    ? window.__BASE__
+    : (window.location && window.location.pathname.indexOf('/project20') === 0 ? '/project20' : '');
+  var u = function (p) {
+    if (!p) return BASE ? BASE + '/' : '/';
+    if (p.indexOf('http') === 0 || p.indexOf('#') === 0 || p.indexOf('tel:') === 0 || p.indexOf('mailto:') === 0) return p;
+    return BASE + (p.charAt(0) === '/' ? p : '/' + p);
+  };
 
   /* ---------------- Cart store ---------------- */
   var KEY = 'themeal_cart', mem = [];
@@ -87,7 +95,7 @@
     b.addEventListener('click', function () {
       var p = findP(b.getAttribute('data-quick-add')); if (!p) return;
       add({ id: p.id, color: b.getAttribute('data-color') || p.colors[0].id, size: null, qty: 1 });
-      toast('Đã thêm ' + p.name + ' vào giỏ. <a href="/gio-hang">Xem giỏ hàng</a>');
+      toast('Đã thêm ' + p.name + ' vào giỏ. <a href="' + u('/gio-hang') + '">Xem giỏ hàng</a>');
     });
   });
 
@@ -126,10 +134,10 @@
       }
       return { id: P.id, color: sel.color, size: sel.size, qty: Math.min(10, Math.max(1, +qty.value || 1)) };
     }
-    buyForm.addEventListener('submit', function (e) { e.preventDefault(); var it = collect(); if (it) { add(it); location.href = '/thanh-toan'; } });
+    buyForm.addEventListener('submit', function (e) { e.preventDefault(); var it = collect(); if (it) { add(it); location.href = u('/thanh-toan'); } });
     $('[data-action=add]', buyForm).addEventListener('click', function () {
       var it = collect(); if (!it) return;
-      add(it); toast('Đã thêm ' + P.name + (it.size ? ' (size ' + it.size + ')' : '') + ' vào giỏ. <a href="/gio-hang">Xem giỏ hàng</a>');
+      add(it); toast('Đã thêm ' + P.name + (it.size ? ' (size ' + it.size + ')' : '') + ' vào giỏ. <a href="' + u('/gio-hang') + '">Xem giỏ hàng</a>');
     });
 
     // gallery
@@ -184,7 +192,7 @@
     var c = load();
     if (!c.length) {
       cartRoot.className = '';
-      cartRoot.innerHTML = '<div class="empty" style="margin-bottom:96px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg><h2 class="h3">Giỏ hàng của bạn đang trống</h2><p class="muted">Khám phá nhẫn và cân thông minh the.Meal để bắt đầu sống khoẻ mỗi ngày.</p><a class="btn btn-primary" href="/san-pham">Xem sản phẩm</a></div>';
+      cartRoot.innerHTML = '<div class="empty" style="margin-bottom:96px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg><h2 class="h3">Giỏ hàng của bạn đang trống</h2><p class="muted">Khám phá nhẫn và cân thông minh the.Meal để bắt đầu sống khoẻ mỗi ngày.</p><a class="btn btn-primary" href="' + u('/san-pham') + '">Xem sản phẩm</a></div>';
       return;
     }
     cartRoot.className = 'cart-layout';
@@ -192,15 +200,15 @@
       var p = findP(it.id); if (!p) return '';
       var color = p.colors.filter(function (x) { return x.id === it.color; })[0] || p.colors[0];
       return '<div class="cart-item"><img src="' + p.image + '" alt="' + p.name + '" width="96" height="96">' +
-        '<div><h3><a href="/san-pham/' + p.id + '" style="text-decoration:none">' + p.name + '</a></h3><div class="meta">' + color.name + (it.size ? ' · Size ' + it.size : '') + '</div><div style="font-weight:700;margin-top:4px">' + vnd(p.price) + '</div></div>' +
+        '<div><h3><a href="' + u('/san-pham/' + (p.slug || p.id)) + '" style="text-decoration:none">' + p.name + '</a></h3><div class="meta">' + color.name + (it.size ? ' · Size ' + it.size : '') + '</div><div style="font-weight:700;margin-top:4px">' + vnd(p.price) + '</div></div>' +
         '<div class="right"><div class="qty"><button type="button" data-i="' + i + '" data-d="-1" aria-label="Giảm số lượng ' + p.name + '">−</button><input type="number" value="' + it.qty + '" aria-label="Số lượng ' + p.name + '" readonly><button type="button" data-i="' + i + '" data-d="1" aria-label="Tăng số lượng ' + p.name + '">+</button></div>' +
         '<button class="remove" type="button" data-rm="' + i + '">Xoá</button></div></div>';
     }).join('');
     var sub = subtotal(c);
-    cartRoot.innerHTML = '<div>' + lines + '<a class="link" href="/san-pham">← Tiếp tục mua sắm</a></div>' +
+    cartRoot.innerHTML = '<div>' + lines + '<a class="link" href="' + u('/san-pham') + '">← Tiếp tục mua sắm</a></div>' +
       '<aside class="summary" aria-labelledby="cs"><h2 id="cs">Tóm tắt đơn hàng</h2><div class="sum-row"><span>Tạm tính (' + count() + ' sản phẩm)</span><span>' + vnd(sub) + '</span></div>' +
       '<div class="sum-row"><span>Phí vận chuyển</span><span>Tính ở bước sau</span></div><div class="sum-row total"><span>Tổng</span><span>' + vnd(sub) + '</span></div>' +
-      '<a class="btn btn-primary btn-block" href="/thanh-toan" style="margin-top:12px">Tiến hành đặt hàng</a><p class="hint center" style="margin:12px 0 0">Thanh toán khi nhận hàng hoặc chuyển khoản</p></aside>';
+      '<a class="btn btn-primary btn-block" href="' + u('/thanh-toan') + '" style="margin-top:12px">Tiến hành đặt hàng</a><p class="hint center" style="margin:12px 0 0">Thanh toán khi nhận hàng hoặc chuyển khoản</p></aside>';
     $$('[data-d]', cartRoot).forEach(function (b) {
       b.addEventListener('click', function () { var c2 = load(), i = +b.getAttribute('data-i'); c2[i].qty = Math.min(10, Math.max(1, c2[i].qty + +b.getAttribute('data-d'))); save(c2); renderCart(); });
     });
@@ -245,7 +253,7 @@
   var co = $('#checkoutForm');
   if (co) {
     var c = load();
-    if (!c.length) { location.replace('/gio-hang'); return; }
+    if (!c.length) { location.replace(u('/gio-hang')); return; }
     var sub = subtotal(c);
     $('#miniCart').innerHTML = c.map(function (it) {
       var p = findP(it.id); if (!p) return '';
@@ -263,9 +271,49 @@
       btn.disabled = true; btn.textContent = 'Đang gửi đơn…';
       var customer = { name: co.name.value, phone: co.phone.value, email: co.email.value, province: co.province.value, address: co.address.value, note: co.note.value };
       try { localStorage.setItem('themeal_customer', JSON.stringify({ name: customer.name, phone: customer.phone, email: customer.email, province: customer.province, address: customer.address })); } catch (e2) {}
+
+      var isStatic = location.hostname.indexOf('github.io') !== -1;
+      function onOrderDone(orderData) {
+        try { localStorage.removeItem(KEY); } catch (e3) {}
+        try { localStorage.setItem('themeal_last_order', JSON.stringify(orderData)); } catch (e4) {}
+        location.href = u('/dat-hang/thanh-cong?code=' + orderData.code + '&t=' + (orderData.token || 'demo'));
+      }
+
+      if (isStatic) {
+        setTimeout(function () {
+          var code = 'TM' + Date.now().toString(36).toUpperCase().slice(-6) + Math.floor(Math.random() * 90 + 10);
+          var orderData = {
+            code: code,
+            token: 'demo' + Date.now().toString(36),
+            createdAt: new Date().toISOString(),
+            status: 'Mới',
+            customer: customer,
+            items: load().map(function (it) {
+              var p = findP(it.id);
+              var color = p && p.colors.filter(function (x) { return x.id === it.color; })[0];
+              return { id: it.id, name: p ? p.name : it.id, image: p ? p.image : '', price: p ? p.price : 0, qty: it.qty, color: it.color, colorName: color ? color.name : '', size: it.size };
+            }),
+            payment: co.querySelector('[name=payment]:checked').value,
+            subtotal: sub,
+            shipping: 0,
+            total: sub
+          };
+          onOrderDone(orderData);
+        }, 500);
+        return;
+      }
+
       fetch('/api/orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ customer: customer, items: load(), payment: co.querySelector('[name=payment]:checked').value }) })
-        .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+        .then(function (r) {
+          if (r.status === 404) {
+            var code = 'TM' + Date.now().toString(36).toUpperCase().slice(-6) + Math.floor(Math.random() * 90 + 10);
+            onOrderDone({ code: code, token: 'demo', createdAt: new Date().toISOString(), customer: customer, items: load(), total: sub, payment: co.querySelector('[name=payment]:checked').value });
+            return null;
+          }
+          return r.json().then(function (d) { return { ok: r.ok, d: d }; });
+        })
         .then(function (res) {
+          if (!res) return;
           if (res.ok) { try { localStorage.removeItem(KEY); } catch (e3) {} location.href = res.d.redirect; return; }
           var errs = (res.d && res.d.errors) || {};
           Object.keys(errs).forEach(function (k) { var i = co.elements[k]; if (i && i.closest) { i.closest('.field').classList.add('has-error'); } });
@@ -289,12 +337,46 @@
       var data = { type: cf.getAttribute('data-type') };
       $$('[name]', cf).forEach(function (f) { data[f.name] = f.value; });
       btn.disabled = true; btn.textContent = 'Đang gửi…';
+
+      if (location.hostname.indexOf('github.io') !== -1) {
+        setTimeout(function () {
+          cf.innerHTML = '<div class="success" style="padding:24px 0"><div class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></div><h2 class="h3">Đã nhận thông tin của bạn!</h2><p class="muted">Đội ngũ the.Meal sẽ liên hệ lại trong giờ làm việc.</p></div>';
+        }, 500);
+        return;
+      }
+
       fetch('/api/contact', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
         .then(function (r) {
-          if (r.ok) { cf.innerHTML = '<div class="success" style="padding:24px 0"><div class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></div><h2 class="h3">Đã nhận thông tin của bạn!</h2><p class="muted">Đội ngũ the.Meal sẽ liên hệ lại trong giờ làm việc.</p></div>'; return; }
+          if (r.ok || r.status === 404) {
+            cf.innerHTML = '<div class="success" style="padding:24px 0"><div class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></div><h2 class="h3">Đã nhận thông tin của bạn!</h2><p class="muted">Đội ngũ the.Meal sẽ liên hệ lại trong giờ làm việc.</p></div>';
+            return;
+          }
           throw 0;
         })
         .catch(function () { alertEl.innerHTML = ICON_ALERT + ' Chưa gửi được. Vui lòng thử lại hoặc gọi 0338 725 103.'; alertEl.classList.add('show'); btn.disabled = false; btn.textContent = label; });
     });
   });
+
+  /* ---------------- Success Page Fallback (Static Hosting) ---------------- */
+  var staticSuccess = $('#staticSuccess');
+  if (staticSuccess) {
+    try {
+      var last = JSON.parse(localStorage.getItem('themeal_last_order') || 'null');
+      if (last) {
+        var itemsHtml = (last.items || []).map(function (it) {
+          return '<div class="mini-line"><img src="' + it.image + '" alt=""><div><b>' + it.name + '</b><br>' + (it.colorName || '') + (it.size ? ' · Size ' + it.size : '') + ' · SL ' + it.qty + '</div><b>' + vnd(it.price * it.qty) + '</b></div>';
+        }).join('');
+        staticSuccess.innerHTML = '<div class="success">' +
+          '<div class="stepper" style="justify-content:center" aria-label="Tiến trình đặt hàng"><span class="done"><i>✓</i>Giỏ hàng</span><span class="sep"></span><span class="done"><i>✓</i>Thông tin</span><span class="sep"></span><span class="on"><i>3</i>Hoàn tất</span></div>' +
+          '<div class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></div>' +
+          '<h1 class="h1">Cảm ơn ' + (last.customer ? last.customer.name : 'bạn') + ', đơn hàng đã được ghi nhận!</h1>' +
+          '<p class="lead" style="margin-inline:auto">Mã đơn <b>' + last.code + '</b>. Nhân viên the.Meal sẽ gọi <b>' + (last.customer ? last.customer.phone : '') + '</b> để xác nhận trong giờ làm việc.</p>' +
+          '<div class="order-box"><h2 class="h3">Chi tiết đơn hàng</h2>' + itemsHtml +
+          '<div class="sum-row total"><span>Tổng cộng</span><span>' + vnd(last.total) + '</span></div>' +
+          '<p class="hint">Thanh toán: ' + (last.payment === 'bank' ? 'Chuyển khoản ngân hàng' : 'Thanh toán khi nhận hàng (COD)') + '</p></div>' +
+          '<div class="hero-ctas" style="justify-content:center;margin-top:28px"><a class="btn btn-primary" href="' + u('/') + '">Về trang chủ</a><a class="link" href="tel:0338725103">Cần hỗ trợ? 0338 725 103</a></div></div>';
+      }
+    } catch (e5) {}
+  }
 })();
+

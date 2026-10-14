@@ -3,6 +3,15 @@ const { icon } = require('./icons');
 const { products, bySlug, publicProduct } = require('./products');
 
 const DEV = process.env.NODE_ENV !== 'production';
+const BASE = process.env.BASE_PATH || '';
+const u = path => {
+  if (!path) return BASE ? `${BASE}/` : '/';
+  if (path.startsWith('http') || path.startsWith('#') || path.startsWith('tel:') || path.startsWith('mailto:') || path.startsWith('data:')) return path;
+  if (path.startsWith('//')) return path;
+  const clean = path.startsWith('/') ? path : `/${path}`;
+  return `${BASE}${clean}`;
+};
+
 const esc = (s = '') => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const vnd = n => Number(n).toLocaleString('vi-VN').replace(/,/g, '.') + '₫';
 const todo = (label = 'Cần bổ sung') => `<span class="todo">${esc(label)}</span>`;
@@ -14,10 +23,10 @@ const C = cfg.company;
 /* ------------------------------------------------------------------ */
 function layout({ title, desc, path = '/', body, jsonld = [], ogImage = '/img/card-pro.webp', bodyClass = '', noindex = false }) {
   const fullTitle = title ? `${title} | the.Meal` : 'the.Meal — Nhẫn & cân thông minh chăm sóc sức khoẻ';
-  const url = cfg.siteUrl + path;
+  const url = cfg.siteUrl + (BASE ? BASE + path : path);
   const navItems = [
-    ['/', 'Trang chủ'], ['/san-pham', 'Sản phẩm'], ['/#he-sinh-thai', 'App the Meal'],
-    ['/hop-tac', 'Hợp tác đại lý'], ['/tin-tuc', 'Tin tức'], ['/lien-he', 'Liên hệ']
+    [u('/'), 'Trang chủ'], [u('/san-pham'), 'Sản phẩm'], [u('/#he-sinh-thai'), 'App the Meal'],
+    [u('/hop-tac'), 'Hợp tác đại lý'], [u('/tin-tuc'), 'Tin tức'], [u('/lien-he'), 'Liên hệ']
   ];
   const orgLd = {
     '@context': 'https://schema.org', '@type': 'Organization', name: C.name, url: cfg.siteUrl,
@@ -35,11 +44,11 @@ ${noindex ? '<meta name="robots" content="noindex">' : ''}
 <link rel="canonical" href="${esc(url)}">
 <meta property="og:type" content="website"><meta property="og:locale" content="vi_VN">
 <meta property="og:title" content="${esc(fullTitle)}"><meta property="og:url" content="${esc(url)}">
-<meta property="og:image" content="${esc(cfg.siteUrl + ogImage)}">
+<meta property="og:image" content="${esc(cfg.siteUrl + u(ogImage))}">
 <meta name="theme-color" content="#0B1C3A">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="preload" href="/fonts/be-vietnam-pro-vietnamese-800-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/css/style.css">
+<link rel="icon" href="${u('/favicon.svg')}" type="image/svg+xml">
+<link rel="preload" href="${u('/fonts/be-vietnam-pro-vietnamese-800-normal.woff2')}" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="${u('/css/style.css')}">
 <script type="application/ld+json">${JSON.stringify([orgLd, ...jsonld]).replace(/</g, '\\u003c')}</script>
 </head>
 <body class="${bodyClass}">
@@ -51,13 +60,13 @@ ${noindex ? '<meta name="robots" content="noindex">' : ''}
 </div></div>
 <header class="header" id="top">
   <div class="wrap">
-    <a class="logo" href="/" aria-label="the.Meal — trang chủ">the<b>.</b>Meal</a>
+    <a class="logo" href="${u('/')}" aria-label="the.Meal — trang chủ">the<b>.</b>Meal</a>
     <nav class="nav" id="nav" aria-label="Điều hướng chính">
-      ${navItems.map(([h, t]) => `<a href="${h}"${h === path ? ' aria-current="page"' : ''}>${t}</a>`).join('')}
+      ${navItems.map(([h, t]) => `<a href="${h}"${(h === u(path) || (path === '/' && h === u('/'))) ? ' aria-current="page"' : ''}>${t}</a>`).join('')}
     </nav>
     <div class="h-actions">
-      <a class="icon-btn" href="/gio-hang" aria-label="Giỏ hàng">${icon('cart')}<span class="cart-count" data-cart-count data-n="0">0</span></a>
-      <a class="btn btn-primary" href="/san-pham" style="min-height:44px;padding:10px 20px">Mua ngay</a>
+      <a class="icon-btn" href="${u('/gio-hang')}" aria-label="Giỏ hàng">${icon('cart')}<span class="cart-count" data-cart-count data-n="0">0</span></a>
+      <a class="btn btn-primary" href="${u('/san-pham')}" style="min-height:44px;padding:10px 20px">Mua ngay</a>
       <button class="icon-btn menu-btn" id="menuBtn" aria-controls="nav" aria-expanded="false" aria-label="Mở menu">${icon('menu')}</button>
     </div>
   </div>
@@ -71,8 +80,15 @@ ${footer()}
   <a class="call" href="tel:${C.hotlineRaw}" aria-label="Gọi hotline ${C.hotline}">${icon('phone')}</a>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script>window.__PRODUCTS__=${JSON.stringify(products.map(publicProduct)).replace(/</g, '\\u003c')};</script>
-<script src="/js/app.js" defer></script>
+<script>
+window.__BASE__=${JSON.stringify(BASE)};
+window.__PRODUCTS__=${JSON.stringify(products.map(p => {
+  const pub = publicProduct(p);
+  pub.image = u(pub.image);
+  return pub;
+})).replace(/</g, '\\u003c')};
+</script>
+<script src="${u('/js/app.js')}" defer></script>
 </body>
 </html>`;
 }
@@ -83,18 +99,18 @@ function footer() {
   <div class="wrap">
     <div class="f-grid">
       <div>
-        <a class="logo" href="/" style="font-size:28px">the<b>.</b>Meal</a>
+        <a class="logo" href="${u('/')}" style="font-size:28px">the<b>.</b>Meal</a>
         <p style="margin-top:14px">Hệ sinh thái chăm sóc sức khoẻ chủ động &amp; toàn diện dành cho người Việt — ăn đúng, vận động đủ, ngủ sâu và sống khoẻ mỗi ngày.</p>
         <div class="socials">${social.map(([h, i, l]) => `<a href="${esc(h)}" target="_blank" rel="noopener" aria-label="${l}">${icon(i)}</a>`).join('')}</div>
       </div>
       <div>
         <h3>Sản phẩm</h3>
-        <ul>${products.map(p => `<li><a href="/san-pham/${p.slug}">${p.name}</a></li>`).join('')}
-        <li><a href="/#chon-size">Hướng dẫn chọn size</a></li><li><a href="/hop-tac">Hợp tác đại lý</a></li></ul>
+        <ul>${products.map(p => `<li><a href="${u('/san-pham/' + p.slug)}">${p.name}</a></li>`).join('')}
+        <li><a href="${u('/#chon-size')}">Hướng dẫn chọn size</a></li><li><a href="${u('/hop-tac')}">Hợp tác đại lý</a></li></ul>
       </div>
       <div>
         <h3>Chính sách</h3>
-        <ul>${POLICIES.map(p => `<li><a href="/chinh-sach/${p.slug}">${p.title}</a></li>`).join('')}</ul>
+        <ul>${POLICIES.map(p => `<li><a href="${u('/chinh-sach/' + p.slug)}">${p.title}</a></li>`).join('')}</ul>
       </div>
       <div>
         <h3>Liên hệ</h3>
@@ -123,17 +139,17 @@ function productCard(p, headingTag = 'h3') {
   return `<article class="p-card reveal${p.featured ? ' featured' : ''}">
     <div class="p-media${p.dark ? '' : ' light'}">
       ${p.badge ? `<span class="badge${p.featured ? '' : ' dark'}">${esc(p.badge)}</span>` : ''}
-      <img src="${p.image}" alt="${esc(p.gallery[0].alt)}" width="720" height="720" loading="lazy">
+      <img src="${u(p.image)}" alt="${esc(p.gallery[0].alt)}" width="720" height="720" loading="lazy">
     </div>
     <div class="p-body">
       <span class="p-cat">${esc(p.category)}</span>
-      <${headingTag} class="p-name"><a href="/san-pham/${p.slug}">${esc(p.name)}</a></${headingTag}>
+      <${headingTag} class="p-name"><a href="${u('/san-pham/' + p.slug)}">${esc(p.name)}</a></${headingTag}>
       <p class="p-tag">${esc(p.tagline)}</p>
       <ul class="p-specs">${p.highlights.map(h => `<li>${esc(h)}</li>`).join('')}</ul>
       <div class="p-foot">
         <span class="price">${vnd(p.price)}</span>
         ${needsOptions
-          ? `<a class="btn btn-dark" href="/san-pham/${p.slug}#chon-tuy-chon">Chọn size ${icon('arrow')}</a>`
+          ? `<a class="btn btn-dark" href="${u('/san-pham/' + p.slug)}#chon-tuy-chon">Chọn size ${icon('arrow')}</a>`
           : `<button class="btn btn-primary" data-quick-add="${p.id}" data-color="${p.colors[0].id}">${icon('cart')} Thêm vào giỏ</button>`}
       </div>
     </div>
@@ -157,7 +173,7 @@ function compareTable() {
     <caption class="sr-only">So sánh Meal Ring Active và Meal Ring Active Pro</caption>
     <thead><tr><th scope="col">Tiêu chí</th><th scope="col">Meal Ring Active</th><th scope="col" class="pro">Meal Ring Active Pro</th></tr></thead>
     <tbody>${rows.map(r => `<tr><th scope="row">${r[0]}</th><td>${r[1]}</td><td class="pro">${r[2]}</td></tr>`).join('')}
-    <tr><th scope="row"></th><td><a class="link" href="/san-pham/${a.slug}">Xem Active ${icon('arrow')}</a></td><td class="pro"><a class="link" href="/san-pham/${b.slug}">Xem Active Pro ${icon('arrow')}</a></td></tr>
+    <tr><th scope="row"></th><td><a class="link" href="${u('/san-pham/' + a.slug)}">Xem Active ${icon('arrow')}</a></td><td class="pro"><a class="link" href="${u('/san-pham/' + b.slug)}">Xem Active Pro ${icon('arrow')}</a></td></tr>
     </tbody></table></div>`;
 }
 
@@ -174,7 +190,7 @@ function sizeGuide(compact = false) {
       ${compact ? '' : `<span class="eyebrow">Hướng dẫn chọn size</span><h2 class="h2">Đo size nhẫn tại nhà <span class="hl">trong 2 phút.</span></h2>`}
       <ol class="steps">${steps.map(s => `<li><div><b>${s[0]}</b><br><span class="muted">${s[1]}</span></div></li>`).join('')}</ol>
       <p class="hint">${icon('alert')} Nên đo 2–3 lần và lấy trung bình; đo ở vị trí to nhất của ngón tay để dễ đeo/tháo.</p>
-      <div class="size-pics">${[1, 2, 3, 4].map(i => `<img src="/img/size-${i}.webp" alt="Bước ${i}: ${steps[i - 1][0]}" width="320" height="316" loading="lazy" style="border-radius:12px">`).join('')}</div>
+      <div class="size-pics">${[1, 2, 3, 4].map(i => `<img src="${u(`/img/size-${i}.webp`)}" alt="Bước ${i}: ${steps[i - 1][0]}" width="320" height="316" loading="lazy" style="border-radius:12px">`).join('')}</div>
     </div>
     <div>
       <table class="size-table">
@@ -200,11 +216,11 @@ function certs() {
 const FAQS = [
   ['Meal Ring Active và Active Pro khác nhau thế nào?', 'Cả hai cùng đo nhịp tim, SpO₂, giấc ngủ, HRV, nhiệt độ cơ thể và vận động 24/7. Active Pro làm từ hợp kim titan, dùng chip Nordic nRF54L15 cùng cảm biến GOODiX + 6 trục, và được AI phân tích toàn diện hơn: khuyến nghị dinh dưỡng, lối sống và cảnh báo sớm khi có dấu hiệu bất thường.'],
   ['Nhẫn có chống nước không? Pin dùng được bao lâu?', 'Cả hai phiên bản đạt chuẩn chống nước 5ATM (~50m), có thể đeo khi rửa tay, tắm hay đi mưa. Mỗi lần sạc dùng được khoảng 5–7 ngày tuỳ tần suất đo.'],
-  ['Làm sao để chọn đúng size nhẫn?', 'Nhẫn có size 7 đến 12. Bạn có thể tự đo chu vi ngón tay bằng một dải giấy và đối chiếu bảng quy đổi ở mục <a href="/#chon-size">Hướng dẫn chọn size</a>, hoặc gọi hotline để được tư vấn.'],
+  ['Làm sao để chọn đúng size nhẫn?', `Nhẫn có size 7 đến 12. Bạn có thể tự đo chu vi ngón tay bằng một dải giấy và đối chiếu bảng quy đổi ở mục <a href="${u('/#chon-size')}">Hướng dẫn chọn size</a>, hoặc gọi hotline để được tư vấn.`],
   ['Thiết bị dùng với ứng dụng nào?', 'Nhẫn Meal Ring và cân Meal Fit Insight đồng bộ qua Bluetooth với ứng dụng the Meal trên Android và iOS. Mọi chỉ số được gom về một nơi, AI chấm điểm và gợi ý hành động mỗi ngày.'],
   ['Cả gia đình có dùng chung cân Meal Fit Insight được không?', 'Được. Cân tự bật và nhận diện người dùng, hỗ trợ nhiều thành viên. Tải trọng tối đa 180kg.'],
   ['Kết quả đo có thay thế được thiết bị y tế không?', 'Không. Sản phẩm giúp bạn theo dõi xu hướng sức khoẻ; mọi gợi ý từ AI chỉ mang tính tham khảo, không thay thế tư vấn dinh dưỡng hoặc chẩn đoán y khoa.'],
-  ['Tôi là chủ phòng tập / nhà thuốc / cửa hàng healthy, có thể hợp tác phân phối không?', 'Có. the.Meal tìm kiếm đối tác phân phối và tích hợp giải pháp trọn gói (thiết bị + app + khoá học). Đăng ký tại trang <a href="/hop-tac">Hợp tác đại lý</a>, đội ngũ sẽ liên hệ và gửi chính sách hợp tác chi tiết.'],
+  ['Tôi là chủ phòng tập / nhà thuốc / cửa hàng healthy, có thể hợp tác phân phối không?', `Có. the.Meal tìm kiếm đối tác phân phối và tích hợp giải pháp trọn gói (thiết bị + app + khoá học). Đăng ký tại trang <a href="${u('/hop-tac')}">Hợp tác đại lý</a>, đội ngũ sẽ liên hệ và gửi chính sách hợp tác chi tiết.`],
   ['Tôi có thể thanh toán bằng cách nào?', 'Bạn có thể thanh toán khi nhận hàng (COD) hoặc chuyển khoản ngân hàng. Sau khi đặt, nhân viên the.Meal sẽ gọi xác nhận đơn.']
 ];
 function faq() {
@@ -226,8 +242,8 @@ function home() {
         <p class="lead">${lead}</p>
         <div class="price-row"><span class="price">${vnd(p.price)}</span><span class="price-note">${note}</span></div>
         <div class="hero-ctas">
-          <a class="btn btn-primary" href="/san-pham/${p.slug}">Mua ${esc(p.name)} ${icon('arrow')}</a>
-          <a class="link" href="/san-pham/${p.slug}#thong-tin">Xem thông số</a>
+          <a class="btn btn-primary" href="${u('/san-pham/' + p.slug)}">Mua ${esc(p.name)} ${icon('arrow')}</a>
+          <a class="link" href="${u('/san-pham/' + p.slug)}#thong-tin">Xem thông số</a>
         </div>
         <div class="trust-mini">
           <span>${icon('shield')} CE · FCC · RoHS</span><span>${icon('package')} Thanh toán COD</span><span>${icon('phone')} Tư vấn ${C.hotline}</span>
@@ -235,7 +251,7 @@ function home() {
       </div>
       <div class="visual">
         <span class="ring-dash" aria-hidden="true"></span>
-        <div class="orb"><img src="${p.image}" alt="${esc(p.gallery[0].alt)}" width="720" height="720"${h === 'h1' ? ' fetchpriority="high"' : ' loading="lazy"'}></div>
+        <div class="orb"><img src="${u(p.image)}" alt="${esc(p.gallery[0].alt)}" width="720" height="720"${h === 'h1' ? ' fetchpriority="high"' : ' loading="lazy"'}></div>
         ${chips.map(c => chip(...c)).join('')}
       </div>
     </div>
@@ -311,7 +327,7 @@ function home() {
       </div>
     </div>
     <div class="split-media reveal" style="max-width:420px;justify-self:center;border-radius:32px">
-      <video src="/img/ring-measure.mp4" poster="/img/ring-measure-poster.jpg" autoplay muted loop playsinline preload="metadata" aria-label="Video nhẫn Meal Ring đang đo trên ngón tay" style="width:100%;aspect-ratio:9/16;object-fit:cover"></video>
+      <video src="${u('/img/ring-measure.mp4')}" poster="${u('/img/ring-measure-poster.jpg')}" autoplay muted loop playsinline preload="metadata" aria-label="Video nhẫn Meal Ring đang đo trên ngón tay" style="width:100%;aspect-ratio:9/16;object-fit:cover"></video>
     </div>
   </div>
 </section>
@@ -332,7 +348,7 @@ function home() {
     </div>
     <div class="phones" tabindex="0" aria-label="Ảnh màn hình ứng dụng the Meal">
       ${[['app-sleep', 'Điểm giấc ngủ'], ['app-hrv', 'Biến thiên nhịp tim'], ['app-ai', 'AI đánh giá tổng quan'], ['app-next', 'Gợi ý bước tiếp theo'], ['app-spo2', 'SpO₂ trong ngày'], ['app-family', 'Sức khoẻ cả nhà']]
-        .map(([f, c]) => `<figure class="phone reveal"><img src="/img/${f}.webp" alt="Màn hình app the Meal: ${c}" width="560" height="1200" loading="lazy"><figcaption>${c}</figcaption></figure>`).join('')}
+        .map(([f, c]) => `<figure class="phone reveal"><img src="${u(`/img/${f}.webp`)}" alt="Màn hình app the Meal: ${c}" width="560" height="1200" loading="lazy"><figcaption>${c}</figcaption></figure>`).join('')}
     </div>
     <p class="center" style="color:#9FB0CC;font-size:14px;margin-top:20px">Mọi gợi ý từ AI chỉ mang tính tham khảo, không thay thế tư vấn dinh dưỡng hoặc y khoa chuyên môn.</p>
   </div>
@@ -365,7 +381,7 @@ function home() {
 
 <section class="section section--mint" id="can-thong-minh">
   <div class="wrap split rev">
-    <div class="split-media reveal"><img src="/img/scale-stand.webp" alt="Người dùng đứng trên cân Meal Fit Insight" width="1000" height="1000" loading="lazy"></div>
+    <div class="split-media reveal"><img src="${u('/img/scale-stand.webp')}" alt="Người dùng đứng trên cân Meal Fit Insight" width="1000" height="1000" loading="lazy"></div>
     <div>
       <span class="eyebrow">Meal Fit Insight · Cân thông minh</span>
       <h2 class="h2">Thành phần cơ thể, <span class="hl">chính xác &amp; khoa học.</span></h2>
@@ -374,7 +390,7 @@ function home() {
       <div class="price-row" style="margin-bottom:20px"><span class="price">${vnd(S.price)}</span><span class="price-note">Model CF586 · Màu đen</span></div>
       <div class="hero-ctas">
         <button class="btn btn-primary" data-quick-add="${S.id}" data-color="den">${icon('cart')} Thêm vào giỏ</button>
-        <a class="link" href="/san-pham/${S.slug}">Xem chi tiết ${icon('arrow')}</a>
+        <a class="link" href="${u('/san-pham/' + S.slug)}">Xem chi tiết ${icon('arrow')}</a>
       </div>
     </div>
   </div>
@@ -387,11 +403,11 @@ function home() {
       <h2 class="h2">Đeo mọi lúc, <span class="hl">đo mọi nơi.</span></h2>
     </div>
     <div class="life">
-      <figure class="reveal"><img src="/img/life-badminton.webp" alt="Chơi cầu lông khi đeo nhẫn Meal Ring màu bạc" loading="lazy"><figcaption>Khi chơi thể thao</figcaption></figure>
-      <figure class="reveal"><img src="/img/life-bottle.webp" alt="Đeo nhẫn màu đen khi tập luyện" loading="lazy"><figcaption>Tập luyện</figcaption></figure>
-      <figure class="reveal"><img src="/img/scale-room.webp" alt="Đo thành phần cơ thể tại phòng khách" loading="lazy"><figcaption>Tại nhà</figcaption></figure>
-      <figure class="reveal"><img src="/img/life-wrist.webp" alt="Nhẫn màu bạc trên tay" loading="lazy"><figcaption>Đi làm</figcaption></figure>
-      <figure class="reveal"><img src="/img/scale-handle.webp" alt="Cầm tay cầm điện cực của cân" loading="lazy"><figcaption>Đo 8 điện cực</figcaption></figure>
+      <figure class="reveal"><img src="${u('/img/life-badminton.webp')}" alt="Chơi cầu lông khi đeo nhẫn Meal Ring màu bạc" loading="lazy"><figcaption>Khi chơi thể thao</figcaption></figure>
+      <figure class="reveal"><img src="${u('/img/life-bottle.webp')}" alt="Đeo nhẫn màu đen khi tập luyện" loading="lazy"><figcaption>Tập luyện</figcaption></figure>
+      <figure class="reveal"><img src="${u('/img/scale-room.webp')}" alt="Đo thành phần cơ thể tại phòng khách" loading="lazy"><figcaption>Tại nhà</figcaption></figure>
+      <figure class="reveal"><img src="${u('/img/life-wrist.webp')}" alt="Nhẫn màu bạc trên tay" loading="lazy"><figcaption>Đi làm</figcaption></figure>
+      <figure class="reveal"><img src="${u('/img/scale-handle.webp')}" alt="Cầm tay cầm điện cực của cân" loading="lazy"><figcaption>Đo 8 điện cực</figcaption></figure>
     </div>
   </div>
 </section>
@@ -430,7 +446,7 @@ function home() {
       <span class="eyebrow">Dành cho doanh nghiệp &amp; đối tác</span>
       <h2 class="h2">Mở rộng danh mục kinh doanh với <span class="hl">giải pháp sức khoẻ trọn gói.</span></h2>
       <p class="lead">Thiết bị + App + Khoá học đồng bộ trong một hệ sinh thái — dành cho nhà phân phối, phòng tập Gym/Yoga, nhà thuốc, cửa hàng healthy và chuyên gia dinh dưỡng có cộng đồng riêng.</p>
-      <div class="hero-ctas"><a class="btn btn-primary" href="/hop-tac">Đăng ký làm đối tác ${icon('arrow')}</a><a class="link" href="/hop-tac#chinh-sach">Xem quyền lợi</a></div>
+      <div class="hero-ctas"><a class="btn btn-primary" href="${u('/hop-tac')}">Đăng ký làm đối tác ${icon('arrow')}</a><a class="link" href="${u('/hop-tac#chinh-sach')}">Xem quyền lợi</a></div>
     </div>
     <ul class="p-specs partner-chips">${PARTNER_TYPES.map(t => `<li>${icon(t[0])}${t[1]}</li>`).join('')}</ul>
   </div>
@@ -453,10 +469,10 @@ function home() {
         <span class="eyebrow">Bắt đầu hành trình sống khoẻ</span>
         <h2 class="h2" style="margin-top:12px">Ăn đúng, vận động đủ, ngủ sâu — <span class="hl">bắt đầu từ hôm nay.</span></h2>
         <p class="lead">Đặt hàng online, thanh toán khi nhận hàng. Nhân viên the.Meal sẽ gọi xác nhận và tư vấn size miễn phí.</p>
-        <div class="hero-ctas"><a class="btn btn-primary" href="/san-pham">Chọn sản phẩm ${icon('arrow')}</a><a class="btn btn-ghost" href="tel:${C.hotlineRaw}">${icon('phone')} ${C.hotline}</a></div>
+        <div class="hero-ctas"><a class="btn btn-primary" href="${u('/san-pham')}">Chọn sản phẩm ${icon('arrow')}</a><a class="btn btn-ghost" href="tel:${C.hotlineRaw}">${icon('phone')} ${C.hotline}</a></div>
       </div>
       <div class="mini-prods" aria-hidden="true">
-        <img src="/img/ring-active.webp" alt="" loading="lazy"><img src="/img/ring-pro.webp" alt="" loading="lazy"><img src="/img/scale.webp" alt="" loading="lazy" style="background:#fff">
+        <img src="${u('/img/ring-active.webp')}" alt="" loading="lazy"><img src="${u('/img/ring-pro.webp')}" alt="" loading="lazy"><img src="${u('/img/scale.webp')}" alt="" loading="lazy" style="background:#fff">
       </div>
     </div>
   </div>
@@ -476,7 +492,7 @@ function productLd(p) {
 function productList() {
   const body = `
 <div class="wrap">
-  <nav class="crumbs" aria-label="Breadcrumb"><ol><li><a href="/">Trang chủ</a></li><li aria-current="page">Sản phẩm</li></ol></nav>
+  <nav class="crumbs" aria-label="Breadcrumb"><ol><li><a href="${u('/')}">Trang chủ</a></li><li aria-current="page">Sản phẩm</li></ol></nav>
   <div class="page-head sec-head">
     <span class="eyebrow">Cửa hàng the.Meal</span>
     <h1 class="h1">Thiết bị chăm sóc sức khoẻ</h1>
@@ -504,12 +520,12 @@ function productPage(p) {
   const ringSteps = ['Tải app the Meal (Android/iOS) và bật Bluetooth.', 'Ghép nối (Pair BLE) nhẫn với app — chỉ mất vài giây.', 'Đeo nhẫn 24/7: dữ liệu tự động đồng bộ mỗi ngày.', 'Xem insight, điểm sức khoẻ và gợi ý hành động trong app.'];
   const body = `
 <div class="wrap">
-  <nav class="crumbs" aria-label="Breadcrumb"><ol><li><a href="/">Trang chủ</a></li><li><a href="/san-pham">Sản phẩm</a></li><li aria-current="page">${esc(p.name)}</li></ol></nav>
+  <nav class="crumbs" aria-label="Breadcrumb"><ol><li><a href="${u('/')}">Trang chủ</a></li><li><a href="${u('/san-pham')}">Sản phẩm</a></li><li aria-current="page">${esc(p.name)}</li></ol></nav>
   <div class="pd">
     <div class="gallery" data-gallery>
-      <div class="g-main${p.dark ? '' : ' light'}" id="gMain"><img src="${p.gallery[0].src}" alt="${esc(p.gallery[0].alt)}" width="720" height="720" fetchpriority="high"></div>
+      <div class="g-main${p.dark ? '' : ' light'}" id="gMain"><img src="${u(p.gallery[0].src)}" alt="${esc(p.gallery[0].alt)}" width="720" height="720" fetchpriority="high"></div>
       <div class="g-thumbs" role="group" aria-label="Ảnh sản phẩm">
-        ${p.gallery.map((g, i) => `<button type="button" aria-pressed="${i === 0}" aria-label="Xem ảnh ${i + 1}: ${esc(g.alt)}" ${g.video ? `data-video="${g.video}" data-poster="${g.poster}"` : `data-src="${g.src}"`} data-alt="${esc(g.alt)}"><img src="${g.video ? g.poster : g.src}" alt="" loading="lazy" width="76" height="76"></button>`).join('')}
+        ${p.gallery.map((g, i) => `<button type="button" aria-pressed="${i === 0}" aria-label="Xem ảnh ${i + 1}: ${esc(g.alt)}" ${g.video ? `data-video="${u(g.video)}" data-poster="${u(g.poster)}"` : `data-src="${u(g.src)}"`} data-alt="${esc(g.alt)}"><img src="${u(g.video ? g.poster : g.src)}" alt="" loading="lazy" width="76" height="76"></button>`).join('')}
       </div>
     </div>
     <div class="pd-info" id="chon-tuy-chon">
@@ -642,7 +658,7 @@ function checkoutPage() {
       </fieldset>
       <p class="form-alert" id="formAlert" role="alert"></p>
       <button class="btn btn-primary btn-block" type="submit" id="placeBtn">Đặt hàng ${icon('arrow')}</button>
-      <p class="hint center" style="margin:0">Bằng việc đặt hàng, bạn đồng ý với <a href="/chinh-sach/bao-mat">Chính sách bảo mật</a> của the.Meal.</p>
+      <p class="hint center" style="margin:0">Bằng việc đặt hàng, bạn đồng ý với <a href="${u('/chinh-sach/bao-mat')}">Chính sách bảo mật</a> của the.Meal.</p>
     </form>
     <aside class="summary" aria-labelledby="sumTitle">
       <h2 id="sumTitle">Đơn hàng của bạn</h2>
@@ -650,7 +666,7 @@ function checkoutPage() {
       <div class="sum-row"><span>Tạm tính</span><span data-subtotal>—</span></div>
       <div class="sum-row"><span>Phí vận chuyển</span><span>${shipText}</span></div>
       <div class="sum-row total"><span>Tổng cộng</span><span data-total>—</span></div>
-      <a class="link" href="/gio-hang">← Sửa giỏ hàng</a>
+      <a class="link" href="${u('/gio-hang')}">← Sửa giỏ hàng</a>
     </aside>
   </div>
 </div>`;
@@ -658,7 +674,10 @@ function checkoutPage() {
 }
 
 function successPage(order) {
-  if (!order) return notFound('Không tìm thấy đơn hàng', 'Mã đơn không hợp lệ hoặc đã hết hạn tra cứu.');
+  if (!order) {
+    const body = `<div class="wrap" id="staticSuccess"><div class="success"><h1 class="h1">Đang tải thông tin đơn hàng…</h1><div class="hero-ctas" style="justify-content:center;margin-top:28px"><a class="btn btn-primary" href="${u('/')}">Về trang chủ</a></div></div></div>`;
+    return layout({ title: 'Đặt hàng thành công', path: '/dat-hang/thanh-cong', body, noindex: true });
+  }
   const b = cfg.bank;
   const hasBank = b.bin && b.account;
   const qr = hasBank ? `https://img.vietqr.io/image/${encodeURIComponent(b.bin)}-${encodeURIComponent(b.account)}-compact2.png?amount=${order.total}&addInfo=${encodeURIComponent(order.code)}&accountName=${encodeURIComponent(b.holder)}` : '';
@@ -676,12 +695,12 @@ function successPage(order) {
   <p class="lead" style="margin-inline:auto">Mã đơn <b>${order.code}</b>. Nhân viên the.Meal sẽ gọi <b>${esc(order.customer.phone)}</b> để xác nhận trong giờ làm việc.</p>
   <div class="order-box">
     <h2 class="h3">Chi tiết đơn hàng</h2>
-    ${order.items.map(it => `<div class="mini-line"><img src="${it.image}" alt=""><div><b>${esc(it.name)}</b><br>${esc(it.colorName)}${it.size ? ' · Size ' + esc(it.size) : ''} · SL ${it.qty}</div><b>${vnd(it.price * it.qty)}</b></div>`).join('')}
+    ${order.items.map(it => `<div class="mini-line"><img src="${u(it.image)}" alt=""><div><b>${esc(it.name)}</b><br>${esc(it.colorName)}${it.size ? ' · Size ' + esc(it.size) : ''} · SL ${it.qty}</div><b>${vnd(it.price * it.qty)}</b></div>`).join('')}
     <div class="sum-row total"><span>Tổng cộng</span><span>${vnd(order.total)}</span></div>
     <p class="hint">Thanh toán: ${order.payment === 'bank' ? 'Chuyển khoản ngân hàng' : 'Thanh toán khi nhận hàng (COD)'}${order.shipping == null ? ' · Phí vận chuyển sẽ được xác nhận qua điện thoại.' : ''}</p>
     ${bankBlock}
   </div>
-  <div class="hero-ctas" style="justify-content:center;margin-top:28px"><a class="btn btn-primary" href="/">Về trang chủ</a><a class="link" href="tel:${C.hotlineRaw}">${icon('phone')} Cần hỗ trợ? ${C.hotline}</a></div>
+  <div class="hero-ctas" style="justify-content:center;margin-top:28px"><a class="btn btn-primary" href="${u('/')}">Về trang chủ</a><a class="link" href="tel:${C.hotlineRaw}">${icon('phone')} Cần hỗ trợ? ${C.hotline}</a></div>
 </div></div>
 <script>try{localStorage.removeItem('themeal_cart')}catch(e){}</script>`;
   return layout({ title: 'Đặt hàng thành công', path: '/dat-hang/thanh-cong', body, noindex: true });
@@ -690,7 +709,7 @@ function successPage(order) {
 function contactPage() {
   const body = `
 <div class="wrap">
-  <nav class="crumbs" aria-label="Breadcrumb"><ol><li><a href="/">Trang chủ</a></li><li aria-current="page">Liên hệ</li></ol></nav>
+  <nav class="crumbs" aria-label="Breadcrumb"><ol><li><a href="${u('/')}">Trang chủ</a></li><li aria-current="page">Liên hệ</li></ol></nav>
   <div class="page-head sec-head"><span class="eyebrow">Liên hệ</span><h1 class="h1">Chúng tôi luôn sẵn sàng tư vấn</h1>
   <p class="lead">Cần chọn size, so sánh sản phẩm hay mua số lượng lớn làm quà tặng doanh nghiệp? Để lại thông tin — the.Meal sẽ gọi lại cho bạn.</p></div>
   <div class="split" style="align-items:start;padding-bottom:96px">
@@ -724,11 +743,11 @@ function contactPage() {
 function newsPage() {
   const body = `
 <div class="wrap">
-  <nav class="crumbs" aria-label="Breadcrumb"><ol><li><a href="/">Trang chủ</a></li><li aria-current="page">Tin tức</li></ol></nav>
+  <nav class="crumbs" aria-label="Breadcrumb"><ol><li><a href="${u('/')}">Trang chủ</a></li><li aria-current="page">Tin tức</li></ol></nav>
   <div class="page-head sec-head"><span class="eyebrow">Tin tức &amp; kiến thức</span><h1 class="h1">Sống khoẻ mỗi ngày</h1></div>
   <div class="empty" style="margin-bottom:96px">${icon('news')}<h2 class="h3">Bài viết đang được chuẩn bị</h2>
   <p class="muted">Kiến thức về giấc ngủ, HRV, thành phần cơ thể và cách dùng thiết bị the.Meal sẽ sớm có tại đây.</p>
-  <a class="btn btn-primary" href="/san-pham">Khám phá sản phẩm</a></div>
+  <a class="btn btn-primary" href="${u('/san-pham')}">Khám phá sản phẩm</a></div>
 </div>`;
   return layout({ title: 'Tin tức', path: '/tin-tuc', body });
 }
@@ -742,14 +761,14 @@ function partnerPage() {
 <section class="section section--navy on-dark" style="padding-bottom:72px">
   <div class="wrap split">
     <div>
-      <nav class="crumbs" aria-label="Breadcrumb" style="padding:0 0 18px"><ol><li><a href="/" style="color:#C9D2E3">Trang chủ</a></li><li aria-current="page" style="color:#fff">Hợp tác đại lý</li></ol></nav>
+      <nav class="crumbs" aria-label="Breadcrumb" style="padding:0 0 18px"><ol><li><a href="${u('/')}" style="color:#C9D2E3">Trang chủ</a></li><li aria-current="page" style="color:#fff">Hợp tác đại lý</li></ol></nav>
       <span class="eyebrow">Chương trình đối tác the.Meal</span>
       <h1 class="h-display" style="margin-top:12px">Giải pháp sức khoẻ <span class="hl">trọn gói</span> cho mô hình kinh doanh của bạn.</h1>
       <p class="lead">Thiết bị thông minh + App the Meal + Khoá học dinh dưỡng/thể chất — đồng bộ trong một hệ sinh thái, sẵn sàng để bạn phân phối hoặc tích hợp vào dịch vụ hiện có.</p>
       <div class="hero-ctas"><a class="btn btn-primary" href="#dang-ky">Đăng ký tư vấn hợp tác ${icon('arrow')}</a><a class="btn btn-ghost" href="tel:${C.hotlineRaw}">${icon('phone')} ${C.hotline}</a></div>
     </div>
     <div class="partner-visual" aria-hidden="true">
-      <img src="/img/ring-pro.webp" alt="" width="360" height="360"><img src="/img/scale.webp" alt="" width="360" height="360"><img src="/img/app-ai.webp" alt="" width="360" height="720">
+      <img src="${u('/img/ring-pro.webp')}" alt="" width="360" height="360"><img src="${u('/img/scale.webp')}" alt="" width="360" height="360"><img src="${u('/img/app-ai.webp')}" alt="" width="360" height="720">
     </div>
   </div>
 </section>
@@ -832,14 +851,14 @@ function policyPage(slug) {
   const p = POLICIES.find(x => x.slug === slug);
   if (!p) return null;
   const content = POLICY_BODY[slug] || `<p>${todo('Nội dung chính sách đang chờ the.Meal cung cấp')}</p><p>Trong thời gian chờ, vui lòng liên hệ hotline <a href="tel:${C.hotlineRaw}">${C.hotline}</a> để được hỗ trợ.</p>`;
-  const body = `<div class="wrap"><nav class="crumbs" aria-label="Breadcrumb"><ol><li><a href="/">Trang chủ</a></li><li aria-current="page">${p.title}</li></ol></nav>
+  const body = `<div class="wrap"><nav class="crumbs" aria-label="Breadcrumb"><ol><li><a href="${u('/')}">Trang chủ</a></li><li aria-current="page">${p.title}</li></ol></nav>
   <article class="prose"><h1 class="h1">${p.title}</h1>${content}</article></div>`;
   return layout({ title: p.title, path: `/chinh-sach/${slug}`, body });
 }
 
 function notFound(title = 'Không tìm thấy trang', msg = 'Trang bạn tìm có thể đã được đổi tên hoặc không tồn tại.') {
   const body = `<div class="wrap"><div class="success"><h1 class="h1">${esc(title)}</h1><p class="lead" style="margin-inline:auto">${esc(msg)}</p>
-  <div class="hero-ctas" style="justify-content:center"><a class="btn btn-primary" href="/">Về trang chủ</a><a class="link" href="/san-pham">Xem sản phẩm ${icon('arrow')}</a></div></div></div>`;
+  <div class="hero-ctas" style="justify-content:center"><a class="btn btn-primary" href="${u('/')}">Về trang chủ</a><a class="link" href="${u('/san-pham')}">Xem sản phẩm ${icon('arrow')}</a></div></div></div>`;
   return layout({ title, body, noindex: true });
 }
 
