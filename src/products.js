@@ -19,12 +19,7 @@ const products = [
     dark: true,
     gallery: [
       { src: '/img/ring-active.webp', alt: 'Nhẫn Meal Ring Active màu đen nhám, mặt trong có cảm biến' },
-      { src: '/img/life-bottle.webp', alt: 'Người dùng đeo nhẫn màu đen khi tập luyện' },
-      { video: '/img/ring-measure.mp4', poster: '/img/ring-measure-poster.jpg', alt: 'Video nhẫn đang đo chỉ số trên ngón tay' },
-      { src: '/img/app-sleep.webp', alt: 'Màn hình app the Meal: điểm giấc ngủ' },
-      { src: '/img/app-hrv.webp', alt: 'Màn hình app the Meal: biến thiên nhịp tim HRV' },
-      { src: '/img/app-spo2.webp', alt: 'Màn hình app the Meal: nồng độ oxy máu SpO2' },
-      { src: '/img/size-guide.webp', alt: 'Hướng dẫn đo size nhẫn 4 bước và bảng quy đổi' }
+      { src: '/img/life-bottle.webp', alt: 'Người dùng đeo nhẫn màu đen khi tập luyện' }
     ],
     colors: RING_COLORS,
     sizes: RING_SIZES,
@@ -67,11 +62,7 @@ const products = [
       { src: '/img/ring-pro.webp', alt: 'Nhẫn Meal Ring Active Pro hợp kim titan màu bạc' },
       { src: '/img/life-badminton.webp', alt: 'Người chơi cầu lông đeo nhẫn màu bạc' },
       { src: '/img/life-wrist.webp', alt: 'Nhẫn màu bạc trên tay người dùng' },
-      { src: '/img/life-car.webp', alt: 'Đeo nhẫn khi lái xe' },
-      { src: '/img/app-ai.webp', alt: 'Màn hình app the Meal: AI đánh giá tổng quan sức khoẻ' },
-      { src: '/img/app-next.webp', alt: 'Màn hình app the Meal: gợi ý bước tiếp theo' },
-      { src: '/img/app-temp.webp', alt: 'Màn hình app the Meal: xu hướng thân nhiệt' },
-      { src: '/img/size-guide.webp', alt: 'Hướng dẫn đo size nhẫn 4 bước và bảng quy đổi' }
+      { src: '/img/life-car.webp', alt: 'Đeo nhẫn khi lái xe' }
     ],
     colors: RING_COLORS,
     sizes: RING_SIZES,
@@ -116,10 +107,7 @@ const products = [
       { src: '/img/scale-stand.webp', alt: 'Người dùng đứng trên cân Meal Fit Insight' },
       { src: '/img/scale-handle.webp', alt: 'Cầm tay cầm điện cực để đo toàn thân' },
       { src: '/img/scale-app.webp', alt: 'Xem kết quả đo trên app khi đứng trên cân' },
-      { src: '/img/scale-room.webp', alt: 'Đo thành phần cơ thể tại phòng khách' },
-      { src: '/img/app-score.webp', alt: 'Màn hình app: điểm sức khoẻ' },
-      { src: '/img/app-body5.webp', alt: 'Màn hình app: phân tích 5 vùng cơ thể' },
-      { src: '/img/app-bodycomp.webp', alt: 'Màn hình app: thành phần cơ thể' }
+      { src: '/img/scale-room.webp', alt: 'Đo thành phần cơ thể tại phòng khách' }
     ],
     colors: [{ id: 'den', name: 'Đen', hex: '#111318' }],
     sizes: [],

@@ -64,7 +64,7 @@ ${noindex ? '<meta name="robots" content="noindex">' : ''}
 </div></div>
 <header class="header" id="top">
   <div class="wrap">
-    <a class="logo" href="${u('/')}" aria-label="the.Meal — trang chủ">the<b>.</b>Meal</a>
+    <a class="logo" href="${u('/')}" aria-label="The.Meal — trang chủ">The<b>.</b>Meal</a>
     <nav class="nav" id="nav" aria-label="Điều hướng chính">
       ${navItems.map(([h, t]) => `<a href="${h}"${(h === u(path) || (path === '/' && h === u('/'))) ? ' aria-current="page"' : ''}>${t}</a>`).join('')}
     </nav>
@@ -104,7 +104,7 @@ function footer() {
   <div class="wrap">
     <div class="f-grid">
       <div>
-        <a class="logo" href="${u('/')}" style="font-size:28px">the<b>.</b>Meal</a>
+        <a class="logo" href="${u('/')}" style="font-size:28px">The<b>.</b>Meal</a>
         <p style="margin-top:14px">Hệ sinh thái chăm sóc sức khoẻ chủ động &amp; toàn diện dành cho người Việt — ăn đúng, vận động đủ, ngủ sâu và sống khoẻ mỗi ngày.</p>
         <div class="socials">${social.map(([h, i, l]) => `<a href="${esc(h)}" target="_blank" rel="noopener" aria-label="${l}">${icon(i)}</a>`).join('')}</div>
       </div>
