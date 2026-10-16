@@ -9,6 +9,7 @@ const { products, bySlug } = require('./src/products');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const STATIC_BASE = process.env.BASE_PATH || '/TheMeal';
 const DATA_DIR = path.join(__dirname, 'data');
 const ORDERS = path.join(DATA_DIR, 'orders.json');
 const CONTACTS = path.join(DATA_DIR, 'contacts.json');
@@ -26,8 +27,9 @@ app.use((req, res, next) => {
   next();
 });
 app.use((req, res, next) => {
-  if (req.url === '/project20') return res.redirect(301, '/project20/');
-  if (req.url.startsWith('/project20/')) req.url = req.url.slice(10);
+  // Cho phép xem thử bản build tĩnh (có BASE_PATH) ngay trên server local.
+  if (req.url === STATIC_BASE) return res.redirect(301, STATIC_BASE + '/');
+  if (req.url.startsWith(STATIC_BASE + '/')) req.url = req.url.slice(STATIC_BASE.length);
   next();
 });
 app.use(express.static(path.join(__dirname, 'public'), { maxAge: process.env.NODE_ENV === 'production' ? '7d' : 0 }));

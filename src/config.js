@@ -5,6 +5,10 @@ const env = process.env;
 module.exports = {
   siteName: 'the.Meal',
   siteUrl: env.SITE_URL || 'https://themeal.vn',
+  // URL nhận đơn hàng & form liên hệ khi chạy bản tĩnh (GitHub Pages).
+  // Dán URL Web App của Google Apps Script (xem scripts/google-apps-script/README.md).
+  // Để trống => bản tĩnh KHÔNG nhận đơn online, khách được hướng dẫn gọi/Zalo.
+  orderEndpoint: env.ORDER_ENDPOINT || '',
   company: {
     name: 'Công ty Cổ phần the Meal VN',
     taxCode: env.TAX_CODE || '',                       // TODO: Mã số thuế

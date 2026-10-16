@@ -10,7 +10,7 @@
   var ICON_ALERT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>';
   var BASE = (typeof window !== 'undefined' && window.__BASE__ != null)
     ? window.__BASE__
-    : (window.location && window.location.pathname.indexOf('/project20') === 0 ? '/project20' : '');
+    : (window.location && window.location.pathname.indexOf('/TheMeal') === 0 ? '/TheMeal' : '');
   var u = function (p) {
     if (!p) return BASE ? BASE + '/' : '/';
     if (p.indexOf('http') === 0 || p.indexOf('#') === 0 || p.indexOf('tel:') === 0 || p.indexOf('mailto:') === 0) return p;
@@ -249,6 +249,27 @@
     return !bad.length;
   }
 
+  /* ---------------- Gửi dữ liệu ----------------
+   * Có ORDER_ENDPOINT (bản tĩnh GitHub Pages) => POST tới Google Apps Script.
+   * Không có => POST tới API của server Express. Không bao giờ báo thành công giả. */
+  var ENDPOINT = window.__ORDER_ENDPOINT__ || '';
+  var HOTLINE = '0338 725 103';
+  function send(path, payload) {
+    var req = ENDPOINT
+      // text/plain để trình duyệt không gửi preflight CORS (Apps Script không hỗ trợ OPTIONS)
+      ? fetch(ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) })
+      : fetch(u(path), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    return req.then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (d) {
+        var ok = ENDPOINT ? (r.ok && d.ok === true) : r.ok;
+        // Không có lỗi cụ thể (vd GitHub Pages trả 404/405 vì không có API) => coi như chưa gửi được
+        if (!ok && !d.errors && !d.error) throw new Error('unavailable');
+        return { ok: ok, d: d };
+      });
+    });
+  }
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+
   /* ---------------- Checkout ---------------- */
   var co = $('#checkoutForm');
   if (co) {
@@ -272,56 +293,28 @@
       var customer = { name: co.name.value, phone: co.phone.value, email: co.email.value, province: co.province.value, address: co.address.value, note: co.note.value };
       try { localStorage.setItem('themeal_customer', JSON.stringify({ name: customer.name, phone: customer.phone, email: customer.email, province: customer.province, address: customer.address })); } catch (e2) {}
 
-      var isStatic = location.hostname.indexOf('github.io') !== -1;
-      function onOrderDone(orderData) {
-        try { localStorage.removeItem(KEY); } catch (e3) {}
-        try { localStorage.setItem('themeal_last_order', JSON.stringify(orderData)); } catch (e4) {}
-        location.href = u('/dat-hang/thanh-cong?code=' + orderData.code + '&t=' + (orderData.token || 'demo'));
-      }
-
-      if (isStatic) {
-        setTimeout(function () {
-          var code = 'TM' + Date.now().toString(36).toUpperCase().slice(-6) + Math.floor(Math.random() * 90 + 10);
-          var orderData = {
-            code: code,
-            token: 'demo' + Date.now().toString(36),
-            createdAt: new Date().toISOString(),
-            status: 'Mới',
-            customer: customer,
-            items: load().map(function (it) {
-              var p = findP(it.id);
-              var color = p && p.colors.filter(function (x) { return x.id === it.color; })[0];
-              return { id: it.id, name: p ? p.name : it.id, image: p ? p.image : '', price: p ? p.price : 0, qty: it.qty, color: it.color, colorName: color ? color.name : '', size: it.size };
-            }),
-            payment: co.querySelector('[name=payment]:checked').value,
-            subtotal: sub,
-            shipping: 0,
-            total: sub
-          };
-          onOrderDone(orderData);
-        }, 500);
-        return;
-      }
-
-      fetch('/api/orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ customer: customer, items: load(), payment: co.querySelector('[name=payment]:checked').value }) })
-        .then(function (r) {
-          if (r.status === 404) {
-            var code = 'TM' + Date.now().toString(36).toUpperCase().slice(-6) + Math.floor(Math.random() * 90 + 10);
-            onOrderDone({ code: code, token: 'demo', createdAt: new Date().toISOString(), customer: customer, items: load(), total: sub, payment: co.querySelector('[name=payment]:checked').value });
-            return null;
-          }
-          return r.json().then(function (d) { return { ok: r.ok, d: d }; });
-        })
+      var payment = co.querySelector('[name=payment]:checked').value;
+      send('/api/orders', { type: 'order', customer: customer, items: load(), payment: payment, page: location.href })
         .then(function (res) {
-          if (!res) return;
-          if (res.ok) { try { localStorage.removeItem(KEY); } catch (e3) {} location.href = res.d.redirect; return; }
-          var errs = (res.d && res.d.errors) || {};
+          if (res.ok) {
+            try { localStorage.removeItem(KEY); } catch (e3) {}
+            if (!ENDPOINT) { location.href = res.d.redirect; return; }
+            // Bản tĩnh: lưu tóm tắt đơn để trang "Đặt hàng thành công" hiển thị.
+            var lines = c.map(function (it) {
+              var p = findP(it.id), color = p && p.colors.filter(function (x) { return x.id === it.color; })[0];
+              return { name: p ? p.name : it.id, image: p ? p.image : '', price: p ? p.price : 0, qty: it.qty, colorName: color ? color.name : '', size: it.size };
+            });
+            try { localStorage.setItem('themeal_last_order', JSON.stringify({ code: res.d.code, customer: customer, items: lines, payment: payment, total: res.d.total || sub })); } catch (e4) {}
+            location.href = u('/dat-hang/thanh-cong?code=' + encodeURIComponent(res.d.code));
+            return;
+          }
+          var errs = res.d.errors || {};
           Object.keys(errs).forEach(function (k) { var i = co.elements[k]; if (i && i.closest) { i.closest('.field').classList.add('has-error'); } });
           alertEl.textContent = errs.items || res.d.error || 'Vui lòng kiểm tra lại các ô được đánh dấu.'; alertEl.classList.add('show');
           btn.disabled = false; btn.innerHTML = label;
         })
         .catch(function () {
-          alertEl.textContent = 'Không gửi được đơn do mất kết nối. Thông tin của bạn vẫn còn — vui lòng thử lại hoặc gọi 0338 725 103.'; alertEl.classList.add('show');
+          alertEl.textContent = 'Chưa gửi được đơn. Thông tin của bạn vẫn còn — vui lòng thử lại, hoặc gọi/nhắn Zalo ' + HOTLINE + ' để đặt hàng.'; alertEl.classList.add('show');
           btn.disabled = false; btn.innerHTML = label;
         });
     });
@@ -334,26 +327,15 @@
       e.preventDefault();
       if (!validateAll(cf)) return;
       var btn = $('button[type=submit]', cf), alertEl = $('.form-alert', cf), label = btn.textContent;
-      var data = { type: cf.getAttribute('data-type') };
+      var data = { type: cf.getAttribute('data-type'), page: location.href };
       $$('[name]', cf).forEach(function (f) { data[f.name] = f.value; });
       btn.disabled = true; btn.textContent = 'Đang gửi…';
-
-      if (location.hostname.indexOf('github.io') !== -1) {
-        setTimeout(function () {
+      send('/api/contact', data)
+        .then(function (res) {
+          if (!res.ok) throw 0;
           cf.innerHTML = '<div class="success" style="padding:24px 0"><div class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></div><h2 class="h3">Đã nhận thông tin của bạn!</h2><p class="muted">Đội ngũ the.Meal sẽ liên hệ lại trong giờ làm việc.</p></div>';
-        }, 500);
-        return;
-      }
-
-      fetch('/api/contact', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
-        .then(function (r) {
-          if (r.ok || r.status === 404) {
-            cf.innerHTML = '<div class="success" style="padding:24px 0"><div class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></div><h2 class="h3">Đã nhận thông tin của bạn!</h2><p class="muted">Đội ngũ the.Meal sẽ liên hệ lại trong giờ làm việc.</p></div>';
-            return;
-          }
-          throw 0;
         })
-        .catch(function () { alertEl.innerHTML = ICON_ALERT + ' Chưa gửi được. Vui lòng thử lại hoặc gọi 0338 725 103.'; alertEl.classList.add('show'); btn.disabled = false; btn.textContent = label; });
+        .catch(function () { alertEl.innerHTML = ICON_ALERT + ' Chưa gửi được. Vui lòng thử lại hoặc gọi ' + HOTLINE + '.'; alertEl.classList.add('show'); btn.disabled = false; btn.textContent = label; });
     });
   });
 
@@ -364,13 +346,13 @@
       var last = JSON.parse(localStorage.getItem('themeal_last_order') || 'null');
       if (last) {
         var itemsHtml = (last.items || []).map(function (it) {
-          return '<div class="mini-line"><img src="' + it.image + '" alt=""><div><b>' + it.name + '</b><br>' + (it.colorName || '') + (it.size ? ' · Size ' + it.size : '') + ' · SL ' + it.qty + '</div><b>' + vnd(it.price * it.qty) + '</b></div>';
+          return '<div class="mini-line"><img src="' + esc(it.image) + '" alt=""><div><b>' + esc(it.name) + '</b><br>' + esc(it.colorName || '') + (it.size ? ' · Size ' + it.size : '') + ' · SL ' + it.qty + '</div><b>' + vnd(it.price * it.qty) + '</b></div>';
         }).join('');
         staticSuccess.innerHTML = '<div class="success">' +
           '<div class="stepper" style="justify-content:center" aria-label="Tiến trình đặt hàng"><span class="done"><i>✓</i>Giỏ hàng</span><span class="sep"></span><span class="done"><i>✓</i>Thông tin</span><span class="sep"></span><span class="on"><i>3</i>Hoàn tất</span></div>' +
           '<div class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></div>' +
-          '<h1 class="h1">Cảm ơn ' + (last.customer ? last.customer.name : 'bạn') + ', đơn hàng đã được ghi nhận!</h1>' +
-          '<p class="lead" style="margin-inline:auto">Mã đơn <b>' + last.code + '</b>. Nhân viên the.Meal sẽ gọi <b>' + (last.customer ? last.customer.phone : '') + '</b> để xác nhận trong giờ làm việc.</p>' +
+          '<h1 class="h1">Cảm ơn ' + (last.customer ? esc(last.customer.name) : 'bạn') + ', đơn hàng đã được ghi nhận!</h1>' +
+          '<p class="lead" style="margin-inline:auto">Mã đơn <b>' + esc(last.code) + '</b>. Nhân viên the.Meal sẽ gọi <b>' + (last.customer ? esc(last.customer.phone) : '') + '</b> để xác nhận trong giờ làm việc.</p>' +
           '<div class="order-box"><h2 class="h3">Chi tiết đơn hàng</h2>' + itemsHtml +
           '<div class="sum-row total"><span>Tổng cộng</span><span>' + vnd(last.total) + '</span></div>' +
           '<p class="hint">Thanh toán: ' + (last.payment === 'bank' ? 'Chuyển khoản ngân hàng' : 'Thanh toán khi nhận hàng (COD)') + '</p></div>' +

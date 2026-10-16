@@ -2,8 +2,10 @@
 const fs = require('fs');
 const path = require('path');
 
-// Set BASE_PATH to repository name for GitHub Pages
-process.env.BASE_PATH = process.env.BASE_PATH || '/project20';
+// GitHub Pages: https://tranvanminhhieu06-gif.github.io/TheMeal/
+// BASE_PATH = tên repo, SITE_URL = domain Pages (đổi nếu chuyển repo hoặc gắn domain riêng).
+process.env.BASE_PATH = process.env.BASE_PATH ?? '/TheMeal';
+process.env.SITE_URL = process.env.SITE_URL || 'https://tranvanminhhieu06-gif.github.io';
 process.env.NODE_ENV = 'production';
 
 const ROOT = path.resolve(__dirname, '..');
@@ -86,5 +88,16 @@ for (const pol of views.POLICIES) {
 }
 
 writePage('404.html', views.notFound());
+
+// 4. Sitemap (nộp trong Google Search Console: <SITE_URL><BASE_PATH>/sitemap.xml)
+const sitemapPaths = ['/', '/san-pham', ...products.map(p => '/san-pham/' + p.slug), '/hop-tac', '/lien-he', '/tin-tuc', ...views.POLICIES.map(p => '/chinh-sach/' + p.slug)];
+const sitemap = [
+  '<?xml version="1.0" encoding="UTF-8"?>',
+  '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+  ...sitemapPaths.map(u => `  <url><loc>${views.abs(u)}</loc></url>`),
+  '</urlset>', ''
+].join('\n');
+fs.writeFileSync(path.join(ROOT, 'sitemap.xml'), sitemap, 'utf8');
+console.log('✓ Generated: sitemap.xml');
 
 console.log('Static build completed successfully!');

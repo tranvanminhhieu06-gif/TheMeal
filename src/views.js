@@ -11,6 +11,8 @@ const u = path => {
   const clean = path.startsWith('/') ? path : `/${path}`;
   return `${BASE}${clean}`;
 };
+// URL tuyệt đối (canonical, og, JSON-LD, sitemap) — luôn gồm BASE_PATH.
+const abs = path => cfg.siteUrl + u(path);
 
 const esc = (s = '') => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const vnd = n => Number(n).toLocaleString('vi-VN').replace(/,/g, '.') + '₫';
@@ -21,15 +23,16 @@ const C = cfg.company;
 /* ------------------------------------------------------------------ */
 /* Layout                                                              */
 /* ------------------------------------------------------------------ */
-function layout({ title, desc, path = '/', body, jsonld = [], ogImage = '/img/card-pro.webp', bodyClass = '', noindex = false }) {
+function layout({ title, desc, path = '/', body, jsonld = [], ogImage = '/img/og-default.jpg', bodyClass = '', noindex = false }) {
   const fullTitle = title ? `${title} | the.Meal` : 'the.Meal — Nhẫn & cân thông minh chăm sóc sức khoẻ';
-  const url = cfg.siteUrl + (BASE ? BASE + path : path);
+  const url = abs(path);
+  const description = desc || 'the.Meal — hệ sinh thái thiết bị chăm sóc sức khoẻ cho người Việt: nhẫn thông minh Meal Ring Active, Active Pro và cân thông minh Meal Fit Insight. Đồng bộ app the Meal, AI gợi ý cá nhân hoá.';
   const navItems = [
     [u('/'), 'Trang chủ'], [u('/san-pham'), 'Sản phẩm'], [u('/#he-sinh-thai'), 'App the Meal'],
     [u('/hop-tac'), 'Hợp tác đại lý'], [u('/tin-tuc'), 'Tin tức'], [u('/lien-he'), 'Liên hệ']
   ];
   const orgLd = {
-    '@context': 'https://schema.org', '@type': 'Organization', name: C.name, url: cfg.siteUrl,
+    '@context': 'https://schema.org', '@type': 'Organization', name: C.name, url: abs('/'),
     email: C.email, telephone: C.hotlineRaw, address: { '@type': 'PostalAddress', streetAddress: C.address, addressCountry: 'VN' },
     sameAs: C.socials.map(x => x.url)
   };
@@ -39,12 +42,13 @@ function layout({ title, desc, path = '/', body, jsonld = [], ogImage = '/img/ca
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(fullTitle)}</title>
-<meta name="description" content="${esc(desc || 'the.Meal — hệ sinh thái thiết bị chăm sóc sức khoẻ cho người Việt: nhẫn thông minh Meal Ring Active, Active Pro và cân thông minh Meal Fit Insight. Đồng bộ app the Meal, AI gợi ý cá nhân hoá.')}">
+<meta name="description" content="${esc(description)}">
 ${noindex ? '<meta name="robots" content="noindex">' : ''}
 <link rel="canonical" href="${esc(url)}">
-<meta property="og:type" content="website"><meta property="og:locale" content="vi_VN">
-<meta property="og:title" content="${esc(fullTitle)}"><meta property="og:url" content="${esc(url)}">
-<meta property="og:image" content="${esc(cfg.siteUrl + u(ogImage))}">
+<meta property="og:type" content="website"><meta property="og:locale" content="vi_VN"><meta property="og:site_name" content="the.Meal">
+<meta property="og:title" content="${esc(fullTitle)}"><meta property="og:description" content="${esc(description)}"><meta property="og:url" content="${esc(url)}">
+<meta property="og:image" content="${esc(abs(ogImage))}"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0B1C3A">
 <link rel="icon" href="${u('/favicon.svg')}" type="image/svg+xml">
 <link rel="preload" href="${u('/fonts/be-vietnam-pro-vietnamese-800-normal.woff2')}" as="font" type="font/woff2" crossorigin>
@@ -82,6 +86,7 @@ ${footer()}
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script>
 window.__BASE__=${JSON.stringify(BASE)};
+window.__ORDER_ENDPOINT__=${JSON.stringify(cfg.orderEndpoint || '')};
 window.__PRODUCTS__=${JSON.stringify(products.map(p => {
   const pub = publicProduct(p);
   pub.image = u(pub.image);
@@ -484,8 +489,8 @@ function home() {
 function productLd(p) {
   return {
     '@context': 'https://schema.org', '@type': 'Product', name: p.name, description: p.summary,
-    image: p.gallery.filter(g => g.src).map(g => cfg.siteUrl + g.src), brand: { '@type': 'Brand', name: 'the.Meal' }, sku: p.id,
-    offers: { '@type': 'Offer', priceCurrency: 'VND', price: p.price, availability: 'https://schema.org/InStock', url: `${cfg.siteUrl}/san-pham/${p.slug}` }
+    image: p.gallery.filter(g => g.src).map(g => abs(g.src)), brand: { '@type': 'Brand', name: 'the.Meal' }, sku: p.id,
+    offers: { '@type': 'Offer', priceCurrency: 'VND', price: p.price, availability: 'https://schema.org/InStock', url: abs(`/san-pham/${p.slug}`) }
   };
 }
 
@@ -608,7 +613,7 @@ function productPage(p) {
   <div><div style="font-size:13px;font-weight:600">${esc(p.name)}</div><span class="price">${vnd(p.price)}</span></div>
   <a class="btn btn-primary" href="#chon-tuy-chon" tabindex="-1">Mua ngay</a>
 </div>`;
-  return layout({ title: `${p.name} — ${p.tagline}`, path: `/san-pham/${p.slug}`, body, desc: `${p.name} giá ${vnd(p.price)}. ${p.summary}`.slice(0, 160), ogImage: p.image, jsonld: [productLd(p)], bodyClass: 'has-sticky' });
+  return layout({ title: `${p.name} — ${p.tagline}`, path: `/san-pham/${p.slug}`, body, desc: `${p.name} giá ${vnd(p.price)}. ${p.summary}`.slice(0, 160), ogImage: `/img/og-${p.slug}.jpg`, jsonld: [productLd(p)], bodyClass: 'has-sticky' });
 }
 
 function cartPage() {
@@ -881,4 +886,4 @@ function adminPage(orders, leads = []) {
   return layout({ title: 'Quản trị', path: '/admin', body, noindex: true });
 }
 
-module.exports = { partnerPage, home, productList, productPage, cartPage, checkoutPage, successPage, contactPage, newsPage, policyPage, notFound, adminPage, POLICIES, vnd, esc };
+module.exports = { partnerPage, home, productList, productPage, cartPage, checkoutPage, successPage, contactPage, newsPage, policyPage, notFound, adminPage, POLICIES, vnd, esc, abs };

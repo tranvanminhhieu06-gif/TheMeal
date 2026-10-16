@@ -39,6 +39,14 @@ design-system/         MASTER.md — quy tắc màu, chữ, component
 3. Khai báo biến môi trường theo `.env.example`.
 4. Lưu ý: ổ đĩa của Render gói Free sẽ bị xoá khi deploy lại. Để giữ đơn hàng lâu dài, cần gắn Persistent Disk vào thư mục `data/` hoặc bật thông báo Telegram.
 
+## Bản tĩnh trên GitHub Pages
+Trang đang chạy tại https://tranvanminhhieu06-gif.github.io/TheMeal/
+```bash
+npm run build        # xuất HTML tĩnh ra thư mục gốc với BASE_PATH=/TheMeal
+```
+Đổi repo hoặc gắn domain riêng: đặt `BASE_PATH` và `SITE_URL` khi build (xem `scripts/build-static.js`).
+Bản tĩnh không có server nên đơn hàng/liên hệ được gửi tới Google Apps Script → Google Sheet: làm theo `scripts/google-apps-script/README.md`, rồi dán URL vào `orderEndpoint` trong `src/config.js`.
+
 ## Còn cần bổ sung
 Các chỗ đang thiếu dữ liệu hiện bằng nhãn cam (chỉ hiện khi `NODE_ENV` khác `production`):
 mã số thuế, giờ làm việc, nội dung chính sách bảo hành/đổi trả/vận chuyển, đánh giá khách hàng, thông tin ngân hàng, chất liệu Active (thép hay titan), màu Active Pro, thời lượng pin của cân (90 hay 120 ngày).
