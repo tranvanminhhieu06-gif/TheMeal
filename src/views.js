@@ -886,4 +886,4 @@ function adminPage(orders, leads = []) {
   return layout({ title: 'Quản trị', path: '/admin', body, noindex: true });
 }
 
-module.exports = { partnerPage, home, productList, productPage, cartPage, checkoutPage, successPage, contactPage, newsPage, policyPage, notFound, adminPage, POLICIES, vnd, esc, abs };
+module.exports = { partnerPage, home, productList, productPage, cartPage, checkoutPage, successPage, contactPage, newsPage, policyPage, notFound, adminPage, POLICIES, vnd, esc, abs, u };

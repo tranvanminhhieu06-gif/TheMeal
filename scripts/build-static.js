@@ -2,10 +2,11 @@
 const fs = require('fs');
 const path = require('path');
 
-// GitHub Pages: https://tranvanminhhieu06-gif.github.io/TheMeal/
-// BASE_PATH = tên repo, SITE_URL = domain Pages (đổi nếu chuyển repo hoặc gắn domain riêng).
-process.env.BASE_PATH = process.env.BASE_PATH ?? '/TheMeal';
-process.env.SITE_URL = process.env.SITE_URL || 'https://tranvanminhhieu06-gif.github.io';
+// GitHub Pages với domain riêng: https://phinfit.com/ (file CNAME ở thư mục gốc).
+// Domain riêng phục vụ từ gốc nên BASE_PATH rỗng. Quay lại github.io: BASE_PATH=/TheMeal SITE_URL=https://tranvanminhhieu06-gif.github.io
+const CUSTOM_DOMAIN = 'phinfit.com';
+process.env.BASE_PATH = process.env.BASE_PATH ?? '';
+process.env.SITE_URL = process.env.SITE_URL || 'https://' + CUSTOM_DOMAIN;
 process.env.NODE_ENV = 'production';
 
 const ROOT = path.resolve(__dirname, '..');
@@ -52,9 +53,13 @@ if (fs.existsSync(path.join(PUBLIC_DIR, 'favicon.svg'))) {
   console.log('✓ Copied favicon.svg');
 }
 
-// 2. Create .nojekyll
+// 2. Create .nojekyll + CNAME (domain riêng; chỉ ghi khi build cho domain đó)
 fs.writeFileSync(path.join(ROOT, '.nojekyll'), '', 'utf8');
 console.log('✓ Created .nojekyll');
+if (process.env.SITE_URL === 'https://' + CUSTOM_DOMAIN) {
+  fs.writeFileSync(path.join(ROOT, 'CNAME'), CUSTOM_DOMAIN + '\n', 'utf8');
+  console.log('✓ Created CNAME:', CUSTOM_DOMAIN);
+}
 
 // 3. Generate pages
 writePage('index.html', views.home());
@@ -99,5 +104,7 @@ const sitemap = [
 ].join('\n');
 fs.writeFileSync(path.join(ROOT, 'sitemap.xml'), sitemap, 'utf8');
 console.log('✓ Generated: sitemap.xml');
+fs.writeFileSync(path.join(ROOT, 'robots.txt'), `User-agent: *\nDisallow: ${views.u('/gio-hang')}\nDisallow: ${views.u('/thanh-toan')}\nSitemap: ${views.abs('/sitemap.xml')}\n`, 'utf8');
+console.log('✓ Generated: robots.txt');
 
 console.log('Static build completed successfully!');

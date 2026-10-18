@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /gio-hang
+Disallow: /thanh-toan
+Sitemap: https://phinfit.com/sitemap.xml

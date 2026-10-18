@@ -40,11 +40,16 @@ design-system/         MASTER.md — quy tắc màu, chữ, component
 4. Lưu ý: ổ đĩa của Render gói Free sẽ bị xoá khi deploy lại. Để giữ đơn hàng lâu dài, cần gắn Persistent Disk vào thư mục `data/` hoặc bật thông báo Telegram.
 
 ## Bản tĩnh trên GitHub Pages
-Trang đang chạy tại https://tranvanminhhieu06-gif.github.io/TheMeal/
+Trang chạy tại https://phinfit.com/ (domain riêng, file `CNAME`).
 ```bash
-npm run build        # xuất HTML tĩnh ra thư mục gốc với BASE_PATH=/TheMeal
+npm run build        # xuất HTML tĩnh ra thư mục gốc cho https://phinfit.com (BASE_PATH rỗng)
 ```
-Đổi repo hoặc gắn domain riêng: đặt `BASE_PATH` và `SITE_URL` khi build (xem `scripts/build-static.js`).
+Quay lại địa chỉ github.io: build với `BASE_PATH=/TheMeal SITE_URL=https://tranvanminhhieu06-gif.github.io` và xoá file `CNAME`.
+
+DNS cho phinfit.com (tại nhà cung cấp tên miền):
+- 4 bản ghi `A` cho `@`: `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`
+- 1 bản ghi `CNAME` cho `www` → `tranvanminhhieu06-gif.github.io`
+- Trên GitHub: Settings → Pages → Custom domain = `phinfit.com`, bật **Enforce HTTPS** khi chứng chỉ sẵn sàng.
 Bản tĩnh không có server nên đơn hàng/liên hệ được gửi tới Google Apps Script → Google Sheet: làm theo `scripts/google-apps-script/README.md`, rồi dán URL vào `orderEndpoint` trong `src/config.js`.
 
 ## Còn cần bổ sung
