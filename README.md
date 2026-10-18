@@ -33,6 +33,22 @@ design-system/         MASTER.md — quy tắc màu, chữ, component
 - SEO: meta/OG, JSON-LD Product/FAQ/Organization, `sitemap.xml`, `robots.txt`
 - Chuẩn truy cập: tương phản AA, dùng được bằng bàn phím, nút ≥44px, tôn trọng `prefers-reduced-motion`
 
+## Deploy lên hosting cPanel (Setup Node.js App) — phinfit.com
+Chạy `server.js` trực tiếp: đơn hàng lưu trong `data/` trên hosting, không cần Google Sheet.
+
+1. **Lấy code về hosting:** cPanel → **Git™ Version Control** → Create → Clone URL `https://github.com/tranvanminhhieu06-gif/TheMeal.git`, Repository Path `phinfit-app`.
+   Thư mục app phải **khác** document root của domain (`phinfit.com`), nếu không Apache sẽ trả file HTML tĩnh thay vì chạy server.
+2. **Tạo app:** cPanel → **Setup Node.js App** → Create Application:
+   - Node.js version: 20 (hoặc ≥ 18) · Application mode: Production
+   - Application root: `phinfit-app` · Application URL: `phinfit.com` · Startup file: `server.js`
+   - Environment variables: `NODE_ENV=production`, `SITE_URL=https://phinfit.com`, `ADMIN_USER`, `ADMIN_PASS` (mật khẩu mạnh), tuỳ chọn `TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID`, `BANK_*` (xem `.env.example`)
+3. Bấm **Run NPM Install**, rồi **Restart**.
+4. **DNS** (iNET): bản ghi `A` cho `@` → IP hosting (cPanel → Shared IP Address), `CNAME` cho `www` → `phinfit.com`.
+5. **HTTPS:** cPanel → **SSL/TLS Status** → Run AutoSSL sau khi DNS đã trỏ về.
+
+Cập nhật code: push lên GitHub → cPanel Git™ Version Control → Manage → **Update from Remote** → Setup Node.js App → **Restart**.
+Sao lưu định kỳ `phinfit-app/data/` (orders.json, contacts.json) — đây là toàn bộ đơn hàng.
+
 ## Deploy lên Render
 1. Đưa thư mục này lên GitHub.
 2. Trên Render chọn New → Web Service. Build command: `npm install`, start command: `npm start`.
