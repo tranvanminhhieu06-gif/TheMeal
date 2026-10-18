@@ -60,13 +60,13 @@
   /* ---------------- Trạng thái ---------------- */
   var S = {
     schema: null, draft: null, hasDraft: false, history: [], media: [], orders: null,
-    tab: 'pages', pageId: 'home', postId: null, eventId: null, blockId: null, productId: null, settingsPart: 'site',
+    tab: 'pages', pageId: 'home', blockId: null, productId: null, settingsPart: 'site',
     saving: false, dirty: false, lastSaved: null, saveError: '', open: {}, device: 'desktop', showPreview: window.innerWidth > 1180
   };
   var ICON_VI = { youtube: 'YouTube', tiktok: 'TikTok', threads: 'Threads', handshake: 'Bắt tay', building: 'Toà nhà', dumbbell: 'Tạ tập', pill: 'Viên thuốc', leaf: 'Lá cây', book: 'Sách', file: 'Tài liệu', headset: 'Tai nghe hỗ trợ', layers: 'Lớp xếp chồng', hourglass: 'Đồng hồ cát', repeat: 'Lặp lại', heart: 'Trái tim', droplet: 'Giọt nước', moon: 'Mặt trăng', activity: 'Nhịp tim (sóng)', footprints: 'Bước chân', thermometer: 'Nhiệt kế', sparkles: 'Lấp lánh (AI)', clock: 'Đồng hồ', cart: 'Giỏ hàng', phone: 'Điện thoại', check: 'Dấu tích', checkCircle: 'Tích tròn', shield: 'Khiên (bảo vệ)', truck: 'Xe giao hàng', refresh: 'Đổi trả', arrow: 'Mũi tên →', mail: 'Thư', pin: 'Vị trí', globe: 'Quả địa cầu', facebook: 'Facebook', battery: 'Pin', waves: 'Sóng nước', scale: 'Cân', users: 'Nhóm người', bone: 'Xương', gauge: 'Đồng hồ đo', alert: 'Cảnh báo', star: 'Ngôi sao', bluetooth: 'Bluetooth', chip: 'Chip', ruler: 'Thước đo', package: 'Hộp hàng', bell: 'Chuông', news: 'Tin tức' };
 
-  function currentOf(kind) { var K = KINDS[kind], l = K.list() || []; return l.filter(function (x) { return x.id === S[K.sel]; })[0] || l[0]; }
-  function currentBlock() { var p = KINDS[S.tab] && currentOf(S.tab); return p && p.blocks.filter(function (b) { return b.id === S.blockId; })[0]; }
+  function currentPage() { return S.draft.pages.filter(function (p) { return p.id === S.pageId; })[0] || S.draft.pages[0]; }
+  function currentBlock() { var p = currentPage(); return p && p.blocks.filter(function (b) { return b.id === S.blockId; })[0]; }
   function currentProduct() { return S.draft.products.filter(function (p) { return p.id === S.productId; })[0]; }
 
   /* ---------------- Lưu nháp tự động ---------------- */
@@ -114,7 +114,7 @@
   }
 
   /* ---------------- Khung trang ---------------- */
-  var TABS = [['pages', 'Trang & khối'], ['posts', 'Bài viết'], ['events', 'Sự kiện'], ['products', 'Sản phẩm'], ['theme', 'Màu sắc'], ['settings', 'Cài đặt chung'], ['media', 'Thư viện ảnh'], ['history', 'Lịch sử'], ['orders', 'Đơn hàng'], ['leads', 'Liên hệ']];
+  var TABS = [['pages', 'Trang & khối'], ['products', 'Sản phẩm'], ['theme', 'Màu sắc'], ['settings', 'Cài đặt chung'], ['media', 'Thư viện ảnh'], ['history', 'Lịch sử'], ['orders', 'Đơn hàng'], ['leads', 'Liên hệ']];
   function render() {
     root.textContent = '';
     var tabs = el('nav', { class: 'cms-tabs', 'aria-label': 'Mục quản trị' }, TABS.map(function (t) {
@@ -142,7 +142,7 @@
     var m = document.getElementById('cmsMain'); if (!m) return;
     var keep = (m.querySelector('.cms-editor') || {}).scrollTop || 0;
     m.textContent = '';
-    ({ pages: viewPages, posts: viewPosts, events: viewEvents, products: viewProducts, theme: viewTheme, settings: viewSettings, media: viewMedia, history: viewHistory, orders: viewOrders, leads: viewLeads })[S.tab](m);
+    ({ pages: viewPages, products: viewProducts, theme: viewTheme, settings: viewSettings, media: viewMedia, history: viewHistory, orders: viewOrders, leads: viewLeads })[S.tab](m);
     var ed = m.querySelector('.cms-editor'); if (ed) ed.scrollTop = keep;
     fitFrame();
   }
@@ -377,47 +377,16 @@
     return { name: name, sub: String(sub).replace(/\*/g, '').replace(/<[^>]+>/g, '').slice(0, 50) };
   }
   var dragIndex = null;
-  var today = function () { return new Date().toISOString().slice(0, 10); };
-  function uniqueIn(list, base) { var b = slugify(base) || 'muc-moi', x = b, n = 2; while (list.some(function (p) { return p.slug === x; })) x = b + '-' + n++; return x; }
-  var KINDS = {
-    pages: { list: function () { return S.draft.pages; }, sel: 'pageId', noun: 'trang', Noun: 'Trang', add: '+ Trang mới', settings: 'Cài đặt trang',
-      fields: function (x) { return S.schema.page.filter(function (d) { return !(x.system && d.key === 'path'); }); },
-      label: function (x) { return (x.title || 'Trang chủ') + '  —  ' + x.path; }, path: function (x) { return x.path; }, create: function () { addPage(); } },
-    posts: { list: function () { return S.draft.posts; }, sel: 'postId', noun: 'bài viết', Noun: 'Bài viết', add: '+ Bài mới', settings: 'Thông tin bài viết',
-      fields: function () { return S.schema.post; }, label: function (x) { return (x.hidden ? '[ẩn] ' : '') + (x.date ? x.date + ' · ' : '') + x.title; },
-      path: function (x) { return '/tin-tuc/' + x.slug; }, create: function () { addEntry('posts'); },
-      note: 'Nội dung bài viết là các khối bên trái (văn bản, ảnh, bảng so sánh, câu hỏi…). Bấm "+ Thêm khối" để thêm.' },
-    events: { list: function () { return S.draft.events; }, sel: 'eventId', noun: 'sự kiện', Noun: 'Sự kiện', add: '+ Sự kiện mới', settings: 'Thông tin sự kiện',
-      fields: function () { return S.schema.event; }, label: function (x) { return (x.hidden ? '[ẩn] ' : '') + (x.date ? x.date + ' · ' : '') + x.title; },
-      path: function (x) { return '/su-kien/' + x.slug; }, create: function () { addEntry('events'); },
-      note: 'Các khối bên trái là phần giới thiệu chi tiết trên trang sự kiện. Form đăng ký tự hiện cuối trang nếu không điền "Link đăng ký ngoài".' }
-  };
-  function addEntry(kind) {
-    var K = KINDS[kind], title = prompt('Tên ' + K.noun + ' mới:'); if (!title) return;
-    var x = { id: uid('n'), slug: uniqueIn(K.list(), title), title: title, category: '', excerpt: '', hidden: false,
-      blocks: [Object.assign(clone(S.schema.blocks.richtext.make), { id: uid(), type: 'richtext', tight: true })] };
-    if (kind === 'posts') Object.assign(x, { author: '', date: today(), cover: '' });
-    else Object.assign(x, { date: '', time: '', duration: '', location: '', price: 0, priceUnit: '/ người', image: '', featured: false, registerUrl: '' });
-    K.list().push(x); S[K.sel] = x.id; S.blockId = null; changed(true);
-  }
-  function viewPages(m) { viewContainer(m, 'pages'); }
-  function viewPosts(m) { viewContainer(m, 'posts'); }
-  function viewEvents(m) { viewContainer(m, 'events'); }
-  function viewContainer(m, kind) {
-    var K = KINDS[kind], items = K.list(), page = currentOf(kind);
-    if (!page) {
-      m.append(el('section', { class: 'cms-page' }, el('div', { class: 'cms-editor-head' }, el('h2', null, K.Noun), el('button', { type: 'button', class: 'cms-btn primary', onclick: K.create }, K.add)),
-        el('p', { class: 'muted' }, 'Chưa có ' + K.noun + ' nào. Bấm "' + K.add + '" để tạo.')));
-      return;
-    }
+  function viewPages(m) {
+    var page = currentPage();
     var blocks = page.blocks;
     var pageList = el('div', { class: 'cms-side-sec' },
-      el('div', { class: 'cms-side-head' }, el('h2', null, K.Noun + ' (' + items.length + ')'), el('button', { type: 'button', class: 'cms-btn small', onclick: K.create }, K.add)),
-      el('select', { class: 'cms-input', 'aria-label': 'Chọn ' + K.noun, onchange: function (e) { S[K.sel] = e.target.value; S.blockId = null; renderMain(); } },
-        items.map(function (p) { return el('option', { value: p.id, selected: p.id === page.id }, K.label(p)); })),
+      el('div', { class: 'cms-side-head' }, el('h2', null, 'Trang'), el('button', { type: 'button', class: 'cms-btn small', onclick: addPage }, '+ Trang mới')),
+      el('select', { class: 'cms-input', 'aria-label': 'Chọn trang', onchange: function (e) { S.pageId = e.target.value; S.blockId = null; renderMain(); } },
+        S.draft.pages.map(function (p) { return el('option', { value: p.id, selected: p.id === page.id }, (p.title || 'Trang chủ') + '  —  ' + p.path); })),
       el('div', { class: 'cms-row' },
-        el('button', { type: 'button', class: 'cms-btn small' + (S.blockId === null ? ' on' : ''), onclick: function () { S.blockId = null; renderMain(); } }, '⚙ ' + K.settings),
-        el('a', { class: 'cms-btn small ghost', href: K.path(page), target: '_blank', rel: 'noopener' }, 'Xem trang thật ↗')));
+        el('button', { type: 'button', class: 'cms-btn small' + (S.blockId === null ? ' on' : ''), onclick: function () { S.blockId = null; renderMain(); } }, '⚙ Cài đặt trang'),
+        el('a', { class: 'cms-btn small ghost', href: page.path, target: '_blank', rel: 'noopener' }, 'Xem trang thật ↗')));
     var list = el('ol', { class: 'cms-blocks' }, blocks.map(function (b, i) {
       var info = blockLabel(b);
       var sub = el('small', { 'data-block-label': '' }); sub._label = function () { return blockLabel(b).sub; }; sub.textContent = info.sub;
@@ -448,19 +417,19 @@
     if (b) {
       var t = S.schema.blocks[b.type];
       editor.append(el('div', { class: 'cms-editor-head' }, el('div', null, el('h2', null, t ? t.label : b.type), t ? el('p', { class: 'cms-hint' }, t.desc) : null),
-        el('button', { type: 'button', class: 'cms-btn small ghost', onclick: function () { S.blockId = null; renderMain(); } }, '← ' + K.settings)));
+        el('button', { type: 'button', class: 'cms-btn small ghost', onclick: function () { S.blockId = null; renderMain(); } }, '← Cài đặt trang')));
       editor.append(t ? el('div', { class: 'cms-form' }, fields(t.fields, b, 'blk:' + b.id)) : el('p', null, 'Loại khối không còn hỗ trợ.'));
     } else {
-      editor.append(el('div', { class: 'cms-editor-head' }, el('h2', null, K.settings)));
-      editor.append(el('div', { class: 'cms-form' }, fields(K.fields(page), page, kind + ':' + page.id)));
+      editor.append(el('div', { class: 'cms-editor-head' }, el('h2', null, 'Cài đặt trang')));
+      editor.append(el('div', { class: 'cms-form' }, fields(S.schema.page.filter(function (d) { return !(page.system && d.key === 'path'); }), page, 'page:' + page.id)));
       if (page.system) editor.append(el('p', { class: 'cms-hint' }, 'Đây là trang hệ thống: không đổi được đường dẫn và không xoá được.'));
       else editor.append(el('div', { class: 'cms-danger' }, el('button', { type: 'button', class: 'cms-btn danger', onclick: function () {
-        if (!confirm('Xoá ' + K.noun + ' "' + (page.title || page.path) + '"? Các liên kết tới ' + K.path(page) + ' sẽ không còn vào được.')) return;
-        var arr = K.list(); arr.splice(arr.indexOf(page), 1); S[K.sel] = null; S.blockId = null; changed(true);
-      } }, 'Xoá ' + K.noun + ' này')));
-      editor.append(el('p', { class: 'cms-hint' }, K.note || 'Chọn một khối bên trái để sửa nội dung, hoặc bấm "+ Thêm khối".'));
+        if (!confirm('Xoá trang "' + (page.title || page.path) + '"? Các liên kết tới ' + page.path + ' sẽ không còn vào được.')) return;
+        S.draft.pages = S.draft.pages.filter(function (p) { return p !== page; }); S.pageId = 'home'; S.blockId = null; changed(true);
+      } }, 'Xoá trang này')));
+      editor.append(el('p', { class: 'cms-hint' }, 'Chọn một khối bên trái để sửa nội dung, hoặc bấm "+ Thêm khối".'));
     }
-    var path = K.path(page);
+    var path = page.path;
     m.append(el('div', { class: 'cms-3col' + (S.showPreview ? '' : ' nopv') }, side, editor, previewPane(path)));
   }
   function addBlock(page) {
@@ -647,9 +616,9 @@
         el('div', { class: 'admin-scroll' }, el('table', { class: 'admin-table' },
           el('thead', null, el('tr', null, ['Ngày', 'Loại', 'Liên hệ', 'Doanh nghiệp / quan tâm', 'Nội dung'].map(function (h) { return el('th', null, h); }))),
           el('tbody', null, d.leads.length ? d.leads.slice().reverse().map(function (l) {
-            return el('tr', null, el('td', null, fmtTime(l.createdAt)), el('td', null, el('span', { class: 'status' }, ({ partner: 'Đối tác', event: 'Sự kiện' })[l.type] || 'Tư vấn')),
+            return el('tr', null, el('td', null, fmtTime(l.createdAt)), el('td', null, el('span', { class: 'status' }, l.type === 'partner' ? 'Đối tác' : 'Tư vấn')),
               el('td', null, l.name, el('br'), el('a', { href: 'tel:' + l.phone }, l.phone), l.email ? [el('br'), el('small', null, l.email)] : null),
-              el('td', null, [l.event, l.company, l.bizType, l.province, l.product].filter(Boolean).join(' · ')), el('td', null, l.message));
+              el('td', null, [l.company, l.bizType, l.province, l.product].filter(Boolean).join(' · ')), el('td', null, l.message));
           }) : el('tr', null, el('td', { colspan: '5' }, 'Chưa có yêu cầu nào.'))))));
     }).catch(function (e) { wrap.textContent = 'Không tải được: ' + e.message; });
   }
@@ -660,8 +629,6 @@
     dl.textContent = '';
     S.draft.pages.forEach(function (p) { dl.append(el('option', { value: p.path }, p.title || 'Trang chủ')); });
     S.draft.products.forEach(function (p) { dl.append(el('option', { value: '/san-pham/' + p.slug }, p.name)); });
-    (S.draft.posts || []).forEach(function (p) { dl.append(el('option', { value: '/tin-tuc/' + p.slug }, p.title)); });
-    (S.draft.events || []).forEach(function (p) { dl.append(el('option', { value: '/su-kien/' + p.slug }, p.title)); });
     ['/gio-hang', 'tel:{hotlineRaw}', 'mailto:{email}'].forEach(function (v) { dl.append(el('option', { value: v })); });
   }
   api('GET', '/admin/api/bootstrap').then(function (d) {

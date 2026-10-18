@@ -37,8 +37,6 @@ function normalize(c) {
   out.sizeGuide = { ...d.sizeGuide, ...(c.sizeGuide || {}) };
   if (!Array.isArray(out.products)) out.products = d.products;
   if (!Array.isArray(out.pages)) out.pages = d.pages;
-  if (!Array.isArray(out.posts)) out.posts = d.posts;
-  if (!Array.isArray(out.events)) out.events = d.events;
   return out;
 }
 
@@ -67,7 +65,6 @@ function validate(c) {
     paths.add(p.path);
   }
   if (!paths.has('/')) errors.push('Không được xoá trang chủ.');
-  for (const p of paths) if (/^\/(tin-tuc|su-kien)\/[^/]+$/.test(p)) errors.push(`Đường dẫn "${p}" trùng dạng trang bài viết/sự kiện.`);
   const ids = new Set(), slugs = new Set();
   for (const p of c.products) {
     if (!p || !SLUG_RE.test(p.id || '') || !SLUG_RE.test(p.slug || '')) { errors.push(`Sản phẩm "${(p && p.name) || '?'}" có mã/đường dẫn không hợp lệ.`); continue; }
@@ -76,17 +73,6 @@ function validate(c) {
     if (!(Number(p.price) >= 0)) errors.push(`Giá của "${p.name}" không hợp lệ.`);
     if (!Array.isArray(p.colors) || !p.colors.length) errors.push(`"${p.name}" cần ít nhất một màu.`);
     ids.add(p.id); slugs.add(p.slug);
-  }
-  // Bài viết (/tin-tuc/…) và sự kiện (/su-kien/…)
-  for (const [list, noun] of [[c.posts, 'Bài viết'], [c.events, 'Sự kiện']]) {
-    if (!Array.isArray(list)) { errors.push(noun + ' bị lỗi cấu trúc.'); continue; }
-    const seen = new Set();
-    for (const x of list) {
-      if (!x || !SLUG_RE.test(x.slug || '')) { errors.push(`${noun} "${(x && x.title) || '?'}" có đường dẫn không hợp lệ (chữ thường không dấu, số, gạch nối).`); continue; }
-      if (seen.has(x.slug)) errors.push(`Hai ${noun.toLowerCase()} trùng đường dẫn "${x.slug}".`);
-      if (!Array.isArray(x.blocks)) errors.push(`${noun} "${x.title}" bị lỗi cấu trúc.`);
-      seen.add(x.slug);
-    }
   }
   return errors;
 }

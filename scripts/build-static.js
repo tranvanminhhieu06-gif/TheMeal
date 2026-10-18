@@ -67,8 +67,6 @@ if (process.env.SITE_URL === 'https://' + CUSTOM_DOMAIN) {
 const both = (p, html) => { if (p === '/') return writePage('index.html', html); const rel = p.slice(1); writePage(rel + '/index.html', html); writePage(rel + '.html', html); };
 for (const pg of content.pages) both(pg.path, views.page(content, pg));
 for (const p of products) both('/san-pham/' + p.slug, views.productPage(content, p));
-for (const p of (content.posts || []).filter(x => !x.hidden)) both('/tin-tuc/' + p.slug, views.postPage(content, p));
-for (const e of (content.events || []).filter(x => !x.hidden)) both('/su-kien/' + e.slug, views.eventPage(content, e));
 both('/gio-hang', views.cartPage(content));
 both('/thanh-toan', views.checkoutPage(content));
 both('/dat-hang/thanh-cong', views.successPage(content, null));
@@ -77,8 +75,7 @@ writePage('404.html', views.notFound(content));
 if (fs.existsSync(path.join(store.DATA, 'uploads'))) { copyDirSync(path.join(store.DATA, 'uploads'), path.join(ROOT, 'uploads')); console.log('✓ Copied uploads'); }
 
 // 4. Sitemap (nộp trong Google Search Console: <SITE_URL><BASE_PATH>/sitemap.xml)
-const sitemapPaths = [...content.pages.filter(p => !p.noindex).map(p => p.path), ...products.map(p => '/san-pham/' + p.slug),
-  ...(content.posts || []).filter(x => !x.hidden).map(p => '/tin-tuc/' + p.slug), ...(content.events || []).filter(x => !x.hidden).map(e => '/su-kien/' + e.slug)];
+const sitemapPaths = [...content.pages.filter(p => !p.noindex).map(p => p.path), ...products.map(p => '/san-pham/' + p.slug)];
 const sitemap = [
   '<?xml version="1.0" encoding="UTF-8"?>',
   '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
