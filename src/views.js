@@ -24,9 +24,9 @@ const C = cfg.company;
 /* Layout                                                              */
 /* ------------------------------------------------------------------ */
 function layout({ title, desc, path = '/', body, jsonld = [], ogImage = '/img/og-default.jpg', bodyClass = '', noindex = false }) {
-  const fullTitle = title ? `${title} | the.Meal` : 'the.Meal — Nhẫn & cân thông minh chăm sóc sức khoẻ';
+  const fullTitle = title ? `${title} | ${cfg.siteName}` : `${cfg.siteName} — Nhẫn & cân chăm sóc sức khoẻ`;
   const url = abs(path);
-  const description = desc || 'the.Meal — hệ sinh thái thiết bị chăm sóc sức khoẻ cho người Việt: nhẫn thông minh Meal Ring Active, Active Pro và cân thông minh Meal Fit Insight. Đồng bộ app the Meal, AI gợi ý cá nhân hoá.';
+  const description = desc || `${cfg.siteName} — hệ sinh thái thiết bị chăm sóc sức khoẻ cho người Việt: nhẫn thông minh Meal Ring Active, Active Pro và cân thông minh Meal Fit Insight. Đồng bộ app the Meal, AI gợi ý cá nhân hoá.`;
   const navItems = [
     [u('/'), 'Trang chủ'], [u('/san-pham'), 'Sản phẩm'], [u('/#he-sinh-thai'), 'App the Meal'],
     [u('/hop-tac'), 'Hợp tác đại lý'], [u('/tin-tuc'), 'Tin tức'], [u('/lien-he'), 'Liên hệ']
@@ -45,7 +45,7 @@ function layout({ title, desc, path = '/', body, jsonld = [], ogImage = '/img/og
 <meta name="description" content="${esc(description)}">
 ${noindex ? '<meta name="robots" content="noindex">' : ''}
 <link rel="canonical" href="${esc(url)}">
-<meta property="og:type" content="website"><meta property="og:locale" content="vi_VN"><meta property="og:site_name" content="the.Meal">
+<meta property="og:type" content="website"><meta property="og:locale" content="vi_VN"><meta property="og:site_name" content="${esc(cfg.siteName)}">
 <meta property="og:title" content="${esc(fullTitle)}"><meta property="og:description" content="${esc(description)}"><meta property="og:url" content="${esc(url)}">
 <meta property="og:image" content="${esc(abs(ogImage))}"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
@@ -886,4 +886,59 @@ function adminPage(orders, leads = []) {
   return layout({ title: 'Quản trị', path: '/admin', body, noindex: true });
 }
 
-module.exports = { partnerPage, home, productList, productPage, cartPage, checkoutPage, successPage, contactPage, newsPage, policyPage, notFound, adminPage, POLICIES, vnd, esc, abs, u };
+// Trang quản trị cho bản tĩnh: không cần server, đọc/ghi Google Sheet qua Apps Script (public/js/admin.js).
+function staticAdminPage() {
+  return `<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Quản trị | ${esc(cfg.siteName)}</title>
+<link rel="icon" href="${u('/favicon.svg')}" type="image/svg+xml">
+<link rel="stylesheet" href="${u('/css/style.css')}">
+</head>
+<body class="admin">
+<header class="admin-bar"><div class="wrap">
+  <a class="logo" href="${u('/')}">Thiết bị thông minh <b>5.0</b></a>
+  <span class="admin-tag">Quản trị</span>
+  <button class="btn btn-ghost" type="button" data-admin-logout hidden>Đăng xuất</button>
+</div></header>
+<main id="main" class="wrap admin-main">
+  <section data-admin-login hidden>
+    <form class="admin-login" novalidate>
+      <h1 class="h2">Đăng nhập quản trị</h1>
+      <p class="muted">Nhập mật khẩu quản trị (ADMIN_KEY đã đặt trong Google Apps Script).</p>
+      <div class="field"><label for="admin-key">Mật khẩu</label><input class="input" id="admin-key" type="password" autocomplete="current-password" required></div>
+      <label class="admin-remember"><input type="checkbox" id="admin-remember"> Ghi nhớ trên máy này</label>
+      <div class="form-alert" role="alert" data-admin-error></div>
+      <button class="btn btn-primary btn-block" type="submit">Đăng nhập</button>
+    </form>
+  </section>
+  <section data-admin-setup hidden>
+    <h1 class="h2">Chưa kết nối Google Sheet</h1>
+    <p class="muted">Bản tĩnh chưa có <code>orderEndpoint</code> trong <code>src/config.js</code>, nên chưa có đơn hàng nào để quản lý. Làm theo <code>scripts/google-apps-script/README.md</code> rồi build lại.</p>
+  </section>
+  <section data-admin-app hidden>
+    <div class="admin-head">
+      <div><h1 class="h2">Đơn hàng</h1><p class="muted" data-admin-summary></p></div>
+      <div class="admin-tools">
+        <input class="input" type="search" placeholder="Tìm mã đơn, tên, SĐT…" data-admin-search aria-label="Tìm đơn hàng">
+        <select class="select" data-admin-filter aria-label="Lọc theo trạng thái"><option value="">Tất cả trạng thái</option></select>
+        <button class="btn btn-ghost" type="button" data-admin-refresh>Tải lại</button>
+        <button class="btn btn-dark" type="button" data-admin-csv>Tải CSV</button>
+      </div>
+    </div>
+    <div class="form-alert" role="alert" data-admin-msg></div>
+    <div class="admin-scroll"><table class="admin-table"><thead><tr><th>Mã đơn</th><th>Khách hàng</th><th>Sản phẩm</th><th>Tổng</th><th>Trạng thái</th></tr></thead><tbody data-admin-orders></tbody></table></div>
+    <h2 class="h2" style="margin-top:48px">Yêu cầu tư vấn &amp; đăng ký đối tác</h2>
+    <div class="admin-scroll"><table class="admin-table"><thead><tr><th>Ngày</th><th>Loại</th><th>Liên hệ</th><th>Doanh nghiệp / quan tâm</th><th>Nội dung</th></tr></thead><tbody data-admin-leads></tbody></table></div>
+  </section>
+</main>
+<script>window.__ORDER_ENDPOINT__=${JSON.stringify(cfg.orderEndpoint || '')};</script>
+<script src="${u('/js/admin.js')}" defer></script>
+</body>
+</html>`;
+}
+
+module.exports = { partnerPage, home, productList, productPage, cartPage, checkoutPage, successPage, contactPage, newsPage, policyPage, notFound, adminPage, staticAdminPage, POLICIES, vnd, esc, abs, u };

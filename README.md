@@ -51,6 +51,7 @@ DNS cho phinfit.com (tại nhà cung cấp tên miền):
 - 1 bản ghi `CNAME` cho `www` → `tranvanminhhieu06-gif.github.io`
 - Trên GitHub: Settings → Pages → Custom domain = `phinfit.com`, bật **Enforce HTTPS** khi chứng chỉ sẵn sàng.
 Bản tĩnh không có server nên đơn hàng/liên hệ được gửi tới Google Apps Script → Google Sheet: làm theo `scripts/google-apps-script/README.md`, rồi dán URL vào `orderEndpoint` trong `src/config.js`.
+Quản lý đơn trên bản tĩnh: mở `/admin` (https://phinfit.com/admin), đăng nhập bằng `ADMIN_KEY` đặt trong Apps Script.
 
 ## Còn cần bổ sung
 Các chỗ đang thiếu dữ liệu hiện bằng nhãn cam (chỉ hiện khi `NODE_ENV` khác `production`):

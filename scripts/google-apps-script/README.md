@@ -22,6 +22,16 @@ Chưa cấu hình bước này thì bản tĩnh **không nhận đơn online**: 
 
 Các tab "Don hang" và "Lien he" sẽ tự được tạo khi có đơn/liên hệ đầu tiên.
 
+## Trang quản trị `/admin` (không cần chạy server)
+Trang `https://phinfit.com/admin` đọc đơn hàng, yêu cầu tư vấn từ Sheet và cho đổi trạng thái đơn, tải CSV.
+
+1. Trong Apps Script: **Cài đặt dự án (biểu tượng bánh răng) → Thuộc tính tập lệnh → Thêm thuộc tính**.
+2. Tên: `ADMIN_KEY`, giá trị: một mật khẩu dài, khó đoán (ít nhất 12 ký tự). **Không** ghi mật khẩu vào `Code.gs` vì repo công khai.
+3. Nếu đã triển khai từ trước: **Triển khai → Quản lý triển khai → Chỉnh sửa → Phiên bản mới** để cập nhật code.
+4. Mở `/admin`, nhập mật khẩu. Tick "Ghi nhớ trên máy này" chỉ trên máy riêng của bạn.
+
+Sai mật khẩu quá 10 lần trong 15 phút thì trang quản trị bị khoá tạm 15 phút. Đổi mật khẩu: sửa giá trị `ADMIN_KEY`, có hiệu lực ngay.
+
 ## Lưu ý
 - Sửa `Code.gs` xong phải **Triển khai → Quản lý triển khai → Chỉnh sửa → Phiên bản mới** thì thay đổi mới có hiệu lực (URL giữ nguyên).
 - Đổi giá, màu hoặc size trong `src/products.js` thì sửa `PRODUCTS` trong `Code.gs` cho khớp, vì giá trong Sheet được tính lại từ đó.

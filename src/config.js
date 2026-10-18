@@ -3,7 +3,7 @@
 const env = process.env;
 
 module.exports = {
-  siteName: 'the.Meal',
+  siteName: 'Thiết bị thông minh 5.0',
   siteUrl: env.SITE_URL || 'https://themeal.vn',
   // URL nhận đơn hàng & form liên hệ khi chạy bản tĩnh (GitHub Pages).
   // Dán URL Web App của Google Apps Script (xem scripts/google-apps-script/README.md).

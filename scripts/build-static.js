@@ -92,6 +92,8 @@ for (const pol of views.POLICIES) {
   }
 }
 
+writePage('admin/index.html', views.staticAdminPage());
+writePage('admin.html', views.staticAdminPage());
 writePage('404.html', views.notFound());
 
 // 4. Sitemap (nộp trong Google Search Console: <SITE_URL><BASE_PATH>/sitemap.xml)
@@ -104,7 +106,7 @@ const sitemap = [
 ].join('\n');
 fs.writeFileSync(path.join(ROOT, 'sitemap.xml'), sitemap, 'utf8');
 console.log('✓ Generated: sitemap.xml');
-fs.writeFileSync(path.join(ROOT, 'robots.txt'), `User-agent: *\nDisallow: ${views.u('/gio-hang')}\nDisallow: ${views.u('/thanh-toan')}\nSitemap: ${views.abs('/sitemap.xml')}\n`, 'utf8');
+fs.writeFileSync(path.join(ROOT, 'robots.txt'), `User-agent: *\nDisallow: ${views.u('/admin')}\nDisallow: ${views.u('/gio-hang')}\nDisallow: ${views.u('/thanh-toan')}\nSitemap: ${views.abs('/sitemap.xml')}\n`, 'utf8');
 console.log('✓ Generated: robots.txt');
 
 console.log('Static build completed successfully!');

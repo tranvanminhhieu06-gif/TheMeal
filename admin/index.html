@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Quản trị | Thiết bị thông minh 5.0</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="admin">
+<header class="admin-bar"><div class="wrap">
+  <a class="logo" href="/">Thiết bị thông minh <b>5.0</b></a>
+  <span class="admin-tag">Quản trị</span>
+  <button class="btn btn-ghost" type="button" data-admin-logout hidden>Đăng xuất</button>
+</div></header>
+<main id="main" class="wrap admin-main">
+  <section data-admin-login hidden>
+    <form class="admin-login" novalidate>
+      <h1 class="h2">Đăng nhập quản trị</h1>
+      <p class="muted">Nhập mật khẩu quản trị (ADMIN_KEY đã đặt trong Google Apps Script).</p>
+      <div class="field"><label for="admin-key">Mật khẩu</label><input class="input" id="admin-key" type="password" autocomplete="current-password" required></div>
+      <label class="admin-remember"><input type="checkbox" id="admin-remember"> Ghi nhớ trên máy này</label>
+      <div class="form-alert" role="alert" data-admin-error></div>
+      <button class="btn btn-primary btn-block" type="submit">Đăng nhập</button>
+    </form>
+  </section>
+  <section data-admin-setup hidden>
+    <h1 class="h2">Chưa kết nối Google Sheet</h1>
+    <p class="muted">Bản tĩnh chưa có <code>orderEndpoint</code> trong <code>src/config.js</code>, nên chưa có đơn hàng nào để quản lý. Làm theo <code>scripts/google-apps-script/README.md</code> rồi build lại.</p>
+  </section>
+  <section data-admin-app hidden>
+    <div class="admin-head">
+      <div><h1 class="h2">Đơn hàng</h1><p class="muted" data-admin-summary></p></div>
+      <div class="admin-tools">
+        <input class="input" type="search" placeholder="Tìm mã đơn, tên, SĐT…" data-admin-search aria-label="Tìm đơn hàng">
+        <select class="select" data-admin-filter aria-label="Lọc theo trạng thái"><option value="">Tất cả trạng thái</option></select>
+        <button class="btn btn-ghost" type="button" data-admin-refresh>Tải lại</button>
+        <button class="btn btn-dark" type="button" data-admin-csv>Tải CSV</button>
+      </div>
+    </div>
+    <div class="form-alert" role="alert" data-admin-msg></div>
+    <div class="admin-scroll"><table class="admin-table"><thead><tr><th>Mã đơn</th><th>Khách hàng</th><th>Sản phẩm</th><th>Tổng</th><th>Trạng thái</th></tr></thead><tbody data-admin-orders></tbody></table></div>
+    <h2 class="h2" style="margin-top:48px">Yêu cầu tư vấn &amp; đăng ký đối tác</h2>
+    <div class="admin-scroll"><table class="admin-table"><thead><tr><th>Ngày</th><th>Loại</th><th>Liên hệ</th><th>Doanh nghiệp / quan tâm</th><th>Nội dung</th></tr></thead><tbody data-admin-leads></tbody></table></div>
+  </section>
+</main>
+<script>window.__ORDER_ENDPOINT__="";</script>
+<script src="/js/admin.js" defer></script>
+</body>
+</html>

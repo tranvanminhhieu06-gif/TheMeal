@@ -30,6 +30,7 @@ function doPost(e) {
   const lock = LockService.getScriptLock();
   try {
     lock.waitLock(10000);
+    if (body.type === 'admin') return json(handleAdmin(body));
     return json(body.type === 'order' ? handleOrder(body) : handleLead(body));
   } catch (err) {
     console.error(err);
@@ -97,6 +98,44 @@ function handleLead(b) {
 
   notify('[the.Meal] ' + e.type + ' mới — ' + e.name, e.type + '\n' + e.name + ' — ' + e.phone + (e.email ? '\n' + e.email : '') + (e.company ? '\nCông ty: ' + e.company : '') + (e.message ? '\n\n' + e.message : ''));
   return { ok: true };
+}
+
+/* ---------- Trang quản trị tĩnh (/admin) ----------
+ * Mật khẩu đặt ở Project Settings → Script properties → ADMIN_KEY (không ghi vào file này vì repo công khai).
+ * Sai quá 10 lần / 15 phút thì khoá tạm, chống dò mật khẩu.
+ */
+const ORDER_STATUSES = ['Mới', 'Đã xác nhận', 'Đang giao', 'Hoàn tất', 'Huỷ'];
+
+function handleAdmin(b) {
+  const key = PropertiesService.getScriptProperties().getProperty('ADMIN_KEY');
+  if (!key) return { ok: false, error: 'Chưa đặt ADMIN_KEY trong Script properties của Apps Script.' };
+  const cache = CacheService.getScriptCache(), fails = Number(cache.get('admin_fail') || 0);
+  if (fails >= 10) return { ok: false, error: 'Sai mật khẩu quá nhiều lần, thử lại sau 15 phút.' };
+  if (String(b.key || '') !== key) { cache.put('admin_fail', String(fails + 1), 900); return { ok: false, auth: false, error: 'Sai mật khẩu quản trị.' }; }
+
+  if (b.action === 'status') {
+    if (ORDER_STATUSES.indexOf(b.status) === -1) return { ok: false, error: 'Trạng thái không hợp lệ.' };
+    const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_ORDERS);
+    const codes = sh ? sh.getRange(1, 2, sh.getLastRow(), 1).getValues() : [];
+    for (let i = 1; i < codes.length; i++) {
+      if (codes[i][0] === b.code) { sh.getRange(i + 1, 3).setValue(b.status); return { ok: true }; }
+    }
+    return { ok: false, error: 'Không tìm thấy đơn ' + b.code + '.' };
+  }
+  return {
+    ok: true,
+    orders: rows(SHEET_ORDERS, ['createdAt', 'code', 'status', 'name', 'phone', 'email', 'province', 'address', 'note', 'items', 'total', 'payment', 'page']),
+    leads: rows(SHEET_CONTACTS, ['createdAt', 'type', 'name', 'phone', 'email', 'company', 'bizType', 'province', 'product', 'message', 'page'])
+  };
+}
+function rows(name, keys) {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name);
+  if (!sh || sh.getLastRow() < 2) return [];
+  return sh.getRange(2, 1, sh.getLastRow() - 1, keys.length).getValues().map(function (r) {
+    const o = {};
+    keys.forEach(function (k, i) { o[k] = r[i] instanceof Date ? r[i].toISOString() : r[i]; });
+    return o;
+  });
 }
 
 /* ---------- helpers ---------- */

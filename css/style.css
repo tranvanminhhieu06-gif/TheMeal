@@ -448,6 +448,24 @@ p{margin:0 0 1em}
 .admin-table{width:100%;border-collapse:collapse;background:#fff;border-radius:var(--r);overflow:hidden;font-size:14px}
 .admin-table th,.admin-table td{padding:12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
 .admin-table th{background:var(--navy);color:#fff}
+.admin-bar{background:#fff;border-bottom:1px solid var(--line)}
+.admin-bar .wrap{display:flex;align-items:center;gap:12px;height:64px}
+.admin-bar .logo{font-size:20px}
+.admin-tag{font-size:13px;font-weight:700;padding:4px 10px;border-radius:var(--pill);background:var(--green-50);color:var(--green-ink)}
+.admin-bar [data-admin-logout]{margin-left:auto}
+.admin-main{padding-top:32px;padding-bottom:96px}
+.admin-login{max-width:400px;margin:48px auto;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:28px;display:grid;gap:16px}
+.admin-login .field{margin:0}
+.admin-remember{display:flex;align-items:center;gap:8px;font-size:15px}
+.admin-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:16px}
+.admin-head .h2{margin:0}
+.admin-tools{display:flex;flex-wrap:wrap;gap:8px}
+.admin-tools .input{width:240px;max-width:100%}
+.admin-tools .select{width:auto}
+.admin-scroll{overflow-x:auto;border-radius:var(--r)}
+.admin-scroll .admin-table{min-width:800px}
+.admin-table .select{min-height:40px;min-width:150px}
+@media (max-width:640px){.admin-tools,.admin-tools .input,.admin-tools .select,.admin-tools .btn{width:100%}}
 .status{display:inline-block;padding:3px 10px;border-radius:var(--pill);font-size:12px;font-weight:700;background:var(--green-50);color:var(--green-ink)}
 
 /* ---------- Reveal ---------- */
