@@ -17,6 +17,15 @@ function publicProduct(p) {
   return { id: p.id, slug: p.slug, name: p.name, price: Number(p.price), image: IMG(p.image), dark: !!p.dark, colors: list(p.colors), sizes: sizesOf(p), category: p.category };
 }
 
+// CSS/JS được trình duyệt lưu 7 ngày, nên gắn ?v=<thời điểm sửa file> để sau mỗi lần cập nhật code khách tải bản mới ngay.
+const assetVer = {};
+function asset(p) {
+  if (!(p in assetVer)) {
+    try { assetVer[p] = Math.round(fs.statSync(path.join(__dirname, '..', 'public', p)).mtimeMs).toString(36); } catch { assetVer[p] = ''; }
+  }
+  return u(p) + (assetVer[p] ? '?v=' + assetVer[p] : '');
+}
+
 function themeCss() {
   const t = C.theme || {};
   const p = color(t.primary, '#4BCE97'), ink = color(t.primaryInk, '#147A56'), d = color(t.dark, '#0B1C3A'), bg = color(t.bg, '#FAF9F6');
@@ -54,7 +63,7 @@ ${noindex || preview ? '<meta name="robots" content="noindex">' : ''}
 <meta name="theme-color" content="${esc(color((C.theme || {}).dark, '#0B1C3A'))}">
 <link rel="icon" href="${u('/favicon.svg')}" type="image/svg+xml">
 <link rel="preload" href="${u('/fonts/be-vietnam-pro-vietnamese-800-normal.woff2')}" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="${u('/css/style.css')}">
+<link rel="stylesheet" href="${asset('/css/style.css')}">
 <style>${themeCss()}</style>
 <script type="application/ld+json">${JSON.stringify([orgLd, ...jsonld]).replace(/</g, '\\u003c')}</script>
 </head>
@@ -90,7 +99,7 @@ window.__BASE__=${JSON.stringify(process.env.BASE_PATH || '')};
 window.__ORDER_ENDPOINT__=${JSON.stringify(cfg.orderEndpoint || '')};
 window.__PRODUCTS__=${JSON.stringify(list(C.products).map(publicProduct)).replace(/</g, '\\u003c')};
 </script>
-<script src="${u('/js/app.js')}" defer></script>
+<script src="${asset('/js/app.js')}" defer></script>
 ${preview ? previewBar() : ''}
 </body>
 </html>`;
@@ -397,12 +406,12 @@ function adminShell(content) {
 <meta name="robots" content="noindex,nofollow">
 <title>Quản trị | ${esc(S.name)}</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/css/style.css">
-<link rel="stylesheet" href="/css/cms.css">
+<link rel="stylesheet" href="${asset('/css/style.css')}">
+<link rel="stylesheet" href="${asset('/css/cms.css')}">
 </head>
 <body class="cms">
 <div id="cms"><p class="cms-loading">Đang tải trang quản trị…</p></div>
-<script src="/js/cms.js" defer></script>
+<script src="${asset('/js/cms.js')}" defer></script>
 </body>
 </html>`;
 }
@@ -418,7 +427,7 @@ function staticAdminPage(content) {
 <meta name="robots" content="noindex,nofollow">
 <title>Quản trị | ${esc(S.name)}</title>
 <link rel="icon" href="${u('/favicon.svg')}" type="image/svg+xml">
-<link rel="stylesheet" href="${u('/css/style.css')}">
+<link rel="stylesheet" href="${asset('/css/style.css')}">
 </head>
 <body class="admin">
 <header class="admin-bar"><div class="wrap">
@@ -458,7 +467,7 @@ function staticAdminPage(content) {
   </section>
 </main>
 <script>window.__ORDER_ENDPOINT__=${JSON.stringify(cfg.orderEndpoint || '')};</script>
-<script src="${u('/js/admin.js')}" defer></script>
+<script src="${asset('/js/admin.js')}" defer></script>
 </body>
 </html>`;
 }
