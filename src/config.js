@@ -1,5 +1,7 @@
 // Cấu hình cửa hàng. Các giá trị TODO: bổ sung khi có thông tin chính thức.
-// Có thể ghi đè bằng biến môi trường (xem .env.example).
+// Có thể ghi đè bằng biến môi trường hoặc file .env ở thư mục gốc app (xem .env.example).
+// Hosting LiteSpeed/cPanel không luôn chuyển SetEnv cho Node, nên đọc thêm .env; biến môi trường thật vẫn được ưu tiên.
+try { process.loadEnvFile(require('path').join(__dirname, '..', '.env')); } catch { /* không có .env hoặc Node < 20.12 */ }
 const env = process.env;
 
 module.exports = {

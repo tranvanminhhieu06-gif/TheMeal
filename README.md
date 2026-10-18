@@ -42,7 +42,8 @@ Chạy `server.js` trực tiếp: đơn hàng lưu trong `data/` trên hosting, 
    - Node.js version: 20 (hoặc ≥ 18) · Application mode: Production
    - Application root: `phinfit-app` · Application URL: `phinfit.com` · Startup file: `server.js`
    - Environment variables: `NODE_ENV=production`, `SITE_URL=https://phinfit.com`, `ADMIN_USER`, `ADMIN_PASS` (mật khẩu mạnh), tuỳ chọn `TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID`, `BANK_*` (xem `.env.example`)
-3. Bấm **Run NPM Install**, rồi **Restart**.
+   Nếu app không nhận biến (vd. `/admin` vẫn báo "chưa bật" — LiteSpeed không chuyển `SetEnv`), tạo file `phinfit-app/.env` theo mẫu `.env.example` (file này không lên GitHub, Update from Remote không ghi đè).
+3. Bấm **Run NPM Install**, rồi **Restart**. (Thông báo lỗi "check availability of application has failed… text/html; charset=utf-8" là báo nhầm, app vẫn chạy.)
 4. **DNS** (iNET): bản ghi `A` cho `@` → IP hosting (cPanel → Shared IP Address), `CNAME` cho `www` → `phinfit.com`.
 5. **HTTPS:** cPanel → **SSL/TLS Status** → Run AutoSSL sau khi DNS đã trỏ về.
 
