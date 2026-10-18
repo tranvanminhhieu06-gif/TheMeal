@@ -16,6 +16,8 @@ yarn-error.log*
 # Runtime data
 data/*.json
 data/*.tmp
+data/history/
+data/uploads/
 !data/.gitkeep
 
 # OS / Editor files

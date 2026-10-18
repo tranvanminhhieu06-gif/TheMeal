@@ -12,9 +12,11 @@ process.env.NODE_ENV = 'production';
 const ROOT = path.resolve(__dirname, '..');
 const PUBLIC_DIR = path.join(ROOT, 'public');
 
-// Load views and product data
+// Load views and the published content (same as the live server)
 const views = require('../src/views');
-const { products } = require('../src/products');
+const store = require('../src/store');
+const content = store.published();
+const { products } = content;
 
 function copyDirSync(src, dest) {
   fs.mkdirSync(dest, { recursive: true });
@@ -62,42 +64,18 @@ if (process.env.SITE_URL === 'https://' + CUSTOM_DOMAIN) {
 }
 
 // 3. Generate pages
-writePage('index.html', views.home());
-writePage('san-pham/index.html', views.productList());
-writePage('san-pham.html', views.productList());
-
-for (const p of products) {
-  writePage(`san-pham/${p.slug}/index.html`, views.productPage(p));
-  writePage(`san-pham/${p.slug}.html`, views.productPage(p));
-}
-
-writePage('gio-hang/index.html', views.cartPage());
-writePage('gio-hang.html', views.cartPage());
-writePage('thanh-toan/index.html', views.checkoutPage());
-writePage('thanh-toan.html', views.checkoutPage());
-writePage('dat-hang/thanh-cong/index.html', views.successPage(null));
-writePage('dat-hang/thanh-cong.html', views.successPage(null));
-writePage('lien-he/index.html', views.contactPage());
-writePage('lien-he.html', views.contactPage());
-writePage('hop-tac/index.html', views.partnerPage());
-writePage('hop-tac.html', views.partnerPage());
-writePage('tin-tuc/index.html', views.newsPage());
-writePage('tin-tuc.html', views.newsPage());
-
-for (const pol of views.POLICIES) {
-  const page = views.policyPage(pol.slug);
-  if (page) {
-    writePage(`chinh-sach/${pol.slug}/index.html`, page);
-    writePage(`chinh-sach/${pol.slug}.html`, page);
-  }
-}
-
-writePage('admin/index.html', views.staticAdminPage());
-writePage('admin.html', views.staticAdminPage());
-writePage('404.html', views.notFound());
+const both = (p, html) => { if (p === '/') return writePage('index.html', html); const rel = p.slice(1); writePage(rel + '/index.html', html); writePage(rel + '.html', html); };
+for (const pg of content.pages) both(pg.path, views.page(content, pg));
+for (const p of products) both('/san-pham/' + p.slug, views.productPage(content, p));
+both('/gio-hang', views.cartPage(content));
+both('/thanh-toan', views.checkoutPage(content));
+both('/dat-hang/thanh-cong', views.successPage(content, null));
+both('/admin', views.staticAdminPage(content));
+writePage('404.html', views.notFound(content));
+if (fs.existsSync(path.join(store.DATA, 'uploads'))) { copyDirSync(path.join(store.DATA, 'uploads'), path.join(ROOT, 'uploads')); console.log('✓ Copied uploads'); }
 
 // 4. Sitemap (nộp trong Google Search Console: <SITE_URL><BASE_PATH>/sitemap.xml)
-const sitemapPaths = ['/', '/san-pham', ...products.map(p => '/san-pham/' + p.slug), '/hop-tac', '/lien-he', '/tin-tuc', ...views.POLICIES.map(p => '/chinh-sach/' + p.slug)];
+const sitemapPaths = [...content.pages.filter(p => !p.noindex).map(p => p.path), ...products.map(p => '/san-pham/' + p.slug)];
 const sitemap = [
   '<?xml version="1.0" encoding="UTF-8"?>',
   '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',

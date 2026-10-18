@@ -33,6 +33,17 @@ design-system/         MASTER.md — quy tắc màu, chữ, component
 - SEO: meta/OG, JSON-LD Product/FAQ/Organization, `sitemap.xml`, `robots.txt`
 - Chuẩn truy cập: tương phản AA, dùng được bằng bàn phím, nút ≥44px, tôn trọng `prefers-reduced-motion`
 
+## Quản trị nội dung (`/admin`)
+Đăng nhập bằng `ADMIN_USER` / `ADMIN_PASS`. Mọi trang được dựng từ **khối** chỉnh được, không cần sửa code:
+- **Trang & khối:** thêm/sửa/xoá/ẩn khối, kéo thả đổi thứ tự, màu nền từng khối; thêm trang mới với đường dẫn tuỳ chọn.
+- **Sản phẩm:** tên, giá, ảnh, màu, size, thông số… Đơn hàng luôn tính theo giá đang đăng.
+- **Màu sắc:** bảng màu toàn website (có bộ màu mẫu). **Cài đặt chung:** logo, menu, liên hệ, mạng xã hội, chân trang, bảng size.
+- **Thư viện ảnh:** tải ảnh/video lên `data/uploads/`. **Lịch sử:** 30 lần đăng gần nhất, khôi phục vào nháp.
+- Mọi thay đổi tự lưu vào **bản nháp** (`data/content-draft.json`), xem trước ngay bên phải; chỉ khi bấm **Đăng lên website** mới ghi vào `data/content.json`.
+
+Chưa đăng lần nào thì website dùng nội dung gốc trong `src/content-default.js`. Trong ô chữ: `*chữ*` để tô màu nhấn; `{hotline}`, `{email}`, `{gia:ma-san-pham}` tự chèn hotline, email, giá.
+Sao lưu `data/` (gồm `content.json`, `history/`, `uploads/`, đơn hàng) định kỳ.
+
 ## Deploy lên hosting cPanel (Setup Node.js App) — phinfit.com
 Chạy `server.js` trực tiếp: đơn hàng lưu trong `data/` trên hosting, không cần Google Sheet.
 

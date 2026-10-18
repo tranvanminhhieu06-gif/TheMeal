@@ -2,9 +2,6 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://phinfit.com/</loc></url>
   <url><loc>https://phinfit.com/san-pham</loc></url>
-  <url><loc>https://phinfit.com/san-pham/meal-ring-active</loc></url>
-  <url><loc>https://phinfit.com/san-pham/meal-ring-active-pro</loc></url>
-  <url><loc>https://phinfit.com/san-pham/meal-fit-insight</loc></url>
   <url><loc>https://phinfit.com/hop-tac</loc></url>
   <url><loc>https://phinfit.com/lien-he</loc></url>
   <url><loc>https://phinfit.com/tin-tuc</loc></url>
@@ -13,4 +10,7 @@
   <url><loc>https://phinfit.com/chinh-sach/van-chuyen</loc></url>
   <url><loc>https://phinfit.com/chinh-sach/thanh-toan</loc></url>
   <url><loc>https://phinfit.com/chinh-sach/bao-mat</loc></url>
+  <url><loc>https://phinfit.com/san-pham/meal-ring-active</loc></url>
+  <url><loc>https://phinfit.com/san-pham/meal-ring-active-pro</loc></url>
+  <url><loc>https://phinfit.com/san-pham/meal-fit-insight</loc></url>
 </urlset>
