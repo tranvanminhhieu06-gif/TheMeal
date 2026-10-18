@@ -81,8 +81,9 @@ p{margin:0 0 1em}
 .header{position:sticky;top:0;z-index:50;background:rgba(250,249,246,.88);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid transparent;transition:border-color .2s,box-shadow .2s}
 .header.scrolled{border-color:var(--line);box-shadow:0 4px 20px rgba(11,28,58,.05)}
 .header .wrap{display:flex;align-items:center;gap:24px;height:72px}
-.logo{font-weight:800;font-size:26px;letter-spacing:-.03em;text-decoration:none;color:var(--navy);display:inline-flex;align-items:baseline}
-.logo b{color:var(--green);font-weight:800}
+.logo{font-weight:800;font-size:26px;letter-spacing:-.03em;white-space:nowrap;text-decoration:none;color:var(--navy);display:inline-flex;align-items:baseline}
+.logo b{color:var(--green);font-weight:800;margin-left:.28em}
+@media (max-width:520px){.header .logo{font-size:20px}}
 .nav{display:flex;gap:4px;margin-left:auto}
 .nav a{padding:10px 14px;border-radius:var(--pill);text-decoration:none;font-weight:600;font-size:15px;color:var(--navy-80);transition:background .15s,color .15s}
 .nav a:hover{background:var(--green-50);color:var(--navy)}
