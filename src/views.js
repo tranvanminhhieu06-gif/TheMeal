@@ -158,8 +158,9 @@ function productLd(p) {
   };
 }
 
-function page(content, pg, { preview = false } = {}) {
+function page(content, pg, { preview = false, views = {} } = {}) {
   return withContent(content, () => {
+    B.useViews(views);
     const blocks = list(pg.blocks).filter(b => b && !b.hidden);
     const faqs = blocks.filter(b => b.type === 'faq').flatMap(b => list(b.items));
     const jsonld = [];
@@ -270,6 +271,85 @@ function productPage(content, p, { preview = false } = {}) {
     // Ảnh chia sẻ riêng nếu có public/img/og-<slug>.jpg, không thì dùng ảnh sản phẩm
     const og = fs.existsSync(path.join(__dirname, '..', 'public', 'img', `og-${p.slug}.jpg`)) ? `/img/og-${p.slug}.jpg` : (p.image || '/img/og-default.jpg');
     return layout({ title: `${p.name} — ${p.tagline}`, path: `/san-pham/${p.slug}`, body, desc: `${p.name} giá ${vnd(p.price)}. ${p.summary || ''}`.slice(0, 160), ogImage: og, jsonld: [productLd(p)], bodyClass: 'has-sticky', preview });
+  });
+}
+
+/* ------------------------------------------------------------------ */
+/* Bài viết & sự kiện                                                  */
+/* ------------------------------------------------------------------ */
+const crumbs3 = (href, label, title) => `<nav class="crumbs" aria-label="Breadcrumb"><ol><li><a href="${u('/')}">Trang chủ</a></li><li><a href="${u(href)}">${label}</a></li><li aria-current="page">${T(title)}</li></ol></nav>`;
+const faqLdOf = blocks => {
+  const faqs = blocks.filter(b => b.type === 'faq' && !b.hidden).flatMap(b => list(b.items));
+  return faqs.length ? [{ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faqs.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: RICH(f.a).replace(/<[^>]+>/g, '') } })) }] : [];
+};
+
+function postPage(content, p, { preview = false, views = {} } = {}) {
+  return withContent(content, () => {
+    B.useViews(views);
+    const related = B.published(C.posts).filter(x => x.slug !== p.slug).sort((a, b) => (B.slugOf(b.category) === B.slugOf(p.category)) - (B.slugOf(a.category) === B.slugOf(p.category)) || B.byDateDesc(a, b)).slice(0, 3);
+    const body = `
+<div class="wrap">
+  ${crumbs3('/tin-tuc', 'Tin tức', p.title)}
+  <header class="article-head">
+    ${p.category ? `<span class="eyebrow">${T(p.category)}</span>` : ''}
+    <h1 class="h1">${T(p.title)}</h1>
+    <p class="article-meta">${p.date ? `<span>${icon('calendar')} ${B.dateVi(p.date, false)}</span>` : ''}${p.author ? `<span>bởi <b>${T(p.author)}</b></span>` : ''}<span>${icon('eye')} ${(views[p.slug] || 0).toLocaleString('vi-VN')} lượt xem</span></p>
+    ${p.excerpt ? `<p class="lead">${T(p.excerpt)}</p>` : ''}
+  </header>
+  ${p.cover ? `<figure class="article-cover"><img src="${IMG(p.cover)}" alt="${esc(p.title)}" fetchpriority="high"></figure>` : ''}
+</div>
+${B.renderBlocks(p)}
+${related.length ? `<section class="section section--white"><div class="wrap"><div class="sec-head"><h2 class="h2">Bài viết liên quan</h2></div><div class="grid g-3">${related.map(x => B.postCard(x, true)).join('')}</div></div></section>` : ''}`;
+    const ld = { '@context': 'https://schema.org', '@type': 'Article', headline: p.title, description: p.excerpt || '', datePublished: p.date || undefined, author: p.author ? { '@type': 'Person', name: p.author } : undefined, image: p.cover ? [abs(p.cover)] : undefined, mainEntityOfPage: abs('/tin-tuc/' + p.slug) };
+    return layout({ title: p.title, desc: p.excerpt, path: '/tin-tuc/' + p.slug, body, ogImage: p.cover || '/img/og-default.jpg', jsonld: [ld, ...faqLdOf(list(p.blocks))], preview });
+  });
+}
+
+function eventPage(content, e, { preview = false } = {}) {
+  return withContent(content, () => {
+    const free = !(Number(e.price) > 0);
+    const reg = e.registerUrl
+      ? `<a class="btn btn-primary" href="${L(e.registerUrl)}"${/^https?:/i.test(e.registerUrl) ? ' target="_blank" rel="noopener"' : ''}>Đăng ký tham gia ${icon('arrow')}</a>`
+      : `<a class="btn btn-primary" href="#dang-ky">Đăng ký tham gia ${icon('arrow')}</a>`;
+    const meta = [e.date && ['calendar', 'Ngày', B.dateVi(e.date)], e.time && ['clock', 'Giờ', T(e.time)], e.duration && ['hourglass', 'Thời lượng', T(e.duration)], e.location && ['pin', 'Địa điểm', T(e.location)]].filter(Boolean);
+    const form = e.registerUrl ? '' : `
+<section class="section section--white" id="dang-ky"><div class="wrap split split--top">
+  <div><span class="eyebrow">Đăng ký</span><h2 class="h2">Giữ chỗ cho *${T(e.title)}*</h2>
+    <p class="lead">Để lại thông tin, chúng tôi sẽ gọi xác nhận và gửi hướng dẫn tham gia.</p></div>
+  <form class="form contact-card" data-lead-form data-type="event" novalidate>
+    <input type="hidden" name="event" value="${esc(e.title)}${e.date ? ' (' + esc(B.dateVi(e.date, false)) + ')' : ''}">
+    <div class="row-2">
+      <div class="field"><label for="ev-name">Họ và tên <span class="req" aria-hidden="true">*</span></label><input class="input" id="ev-name" name="name" autocomplete="name" required><p class="err">${icon('alert')} Vui lòng nhập họ tên.</p></div>
+      <div class="field"><label for="ev-phone">Số điện thoại <span class="req" aria-hidden="true">*</span></label><input class="input" id="ev-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" required><p class="err">${icon('alert')} Nhập số điện thoại gồm 10 số, ví dụ 0912 345 678.</p></div>
+    </div>
+    <div class="field"><label for="ev-email">Email <span class="hint">(không bắt buộc)</span></label><input class="input" id="ev-email" name="email" type="email" autocomplete="email"><p class="err">${icon('alert')} Email chưa đúng định dạng.</p></div>
+    <div class="field"><label for="ev-msg">Ghi chú</label><textarea class="textarea" id="ev-msg" name="message" placeholder="Số người tham gia, câu hỏi cho ban tổ chức…"></textarea></div>
+    <p class="form-alert" role="alert"></p>
+    <button class="btn btn-primary btn-block" type="submit">Gửi đăng ký</button>
+  </form>
+</div></section>`.replace(/\*([^*]+)\*/, '<span class="hl">$1</span>');
+    const body = `
+<div class="wrap">
+  ${crumbs3('/su-kien', 'Sự kiện', e.title)}
+  <div class="pd ev-detail">
+    <div class="ev-detail-media">${e.image ? `<img src="${IMG(e.image)}" alt="${esc(e.title)}" fetchpriority="high">` : `<span class="art art-${B.slugOf(e.category).length % 3}" aria-hidden="true"><i></i><i></i><i></i></span>`}
+      ${free ? '<span class="ev-free">Miễn phí</span>' : ''}</div>
+    <div class="pd-info">
+      ${e.category ? `<span class="eyebrow">${T(e.category)}</span>` : ''}
+      <h1>${T(e.title)}</h1>
+      ${e.excerpt ? `<p class="lead">${T(e.excerpt)}</p>` : ''}
+      <ul class="info-list">${meta.map(([ic, k, v]) => `<li><span class="ic">${icon(ic)}</span><div><small>${k}</small>${v}</div></li>`).join('')}</ul>
+      <div class="price-row" style="margin:18px 0"><span class="price">${free ? 'Miễn phí' : vnd(e.price)}</span>${!free && e.priceUnit ? `<span class="price-note">${T(e.priceUnit)}</span>` : ''}</div>
+      <div class="hero-ctas">${reg}</div>
+    </div>
+  </div>
+</div>
+${B.renderBlocks(e)}
+${form}`;
+    const ld = { '@context': 'https://schema.org', '@type': 'Event', name: e.title, description: e.excerpt || '', startDate: e.date || undefined, image: e.image ? [abs(e.image)] : undefined,
+      location: e.location ? { '@type': 'Place', name: e.location, address: e.location } : undefined,
+      offers: { '@type': 'Offer', price: Number(e.price) || 0, priceCurrency: 'VND', url: abs('/su-kien/' + e.slug) } };
+    return layout({ title: e.title, desc: e.excerpt, path: '/su-kien/' + e.slug, body, ogImage: e.image || '/img/og-default.jpg', jsonld: [ld], preview });
   });
 }
 
@@ -463,4 +543,4 @@ function staticAdminPage(content) {
 </html>`;
 }
 
-module.exports = { page, productPage, cartPage, checkoutPage, successPage, notFound, adminShell, staticAdminPage, publicProduct, vnd, esc, abs, u };
+module.exports = { page, postPage, eventPage, productPage, cartPage, checkoutPage, successPage, notFound, adminShell, staticAdminPage, publicProduct, vnd, esc, abs, u };

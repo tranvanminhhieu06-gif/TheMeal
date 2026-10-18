@@ -53,6 +53,18 @@ const html = (res, s, code = 200) => res.status(code).type('html').send(s);
 const live = () => store.published();
 const findProduct = (c, slug) => c.products.find(p => p.slug === slug);
 const findPage = (c, p) => c.pages.find(x => x.path === p);
+const findPost = (c, slug, all) => (c.posts || []).find(x => x.slug === slug && (all || !x.hidden));
+const findEvent = (c, slug, all) => (c.events || []).find(x => x.slug === slug && (all || !x.hidden));
+
+/* ---------- Lượt xem bài viết (data/views.json, ghi gộp mỗi 5 giây) ---------- */
+const VIEWS_FILE = path.join(DATA_DIR, 'views.json');
+let viewCounts = (() => { try { return JSON.parse(fs.readFileSync(VIEWS_FILE, 'utf8')); } catch { return {}; } })();
+let viewsTimer = null;
+function countView(req, slug) {
+  if (/bot|crawl|spider|preview|facebookexternalhit|zalo/i.test(req.headers['user-agent'] || '')) return;
+  viewCounts[slug] = (viewCounts[slug] || 0) + 1;
+  if (!viewsTimer) viewsTimer = setTimeout(() => { viewsTimer = null; try { writeJson(VIEWS_FILE, viewCounts); } catch (e) { console.error(e); } }, 5000);
+}
 
 /* ---------- Trang chức năng ---------- */
 app.get('/gio-hang', (req, res) => html(res, views.cartPage(live())));
@@ -66,7 +78,8 @@ app.get('/dat-hang/thanh-cong', (req, res) => {
 app.get('/robots.txt', (req, res) => res.type('text').send(`User-agent: *\nDisallow: /admin\nDisallow: /gio-hang\nDisallow: /thanh-toan\nSitemap: ${cfg.siteUrl}/sitemap.xml\n`));
 app.get('/sitemap.xml', (req, res) => {
   const c = live();
-  const urls = [...c.pages.filter(p => !p.noindex).map(p => p.path), ...c.products.map(p => '/san-pham/' + p.slug)];
+  const urls = [...c.pages.filter(p => !p.noindex).map(p => p.path), ...c.products.map(p => '/san-pham/' + p.slug),
+    ...(c.posts || []).filter(p => !p.hidden).map(p => '/tin-tuc/' + p.slug), ...(c.events || []).filter(e => !e.hidden).map(e => '/su-kien/' + e.slug)];
   res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.map(u => `<url><loc>${views.esc(cfg.siteUrl + u)}</loc></url>`).join('')}</urlset>`);
 });
 
@@ -122,7 +135,7 @@ app.post('/api/orders', smallJson, rateLimit(6), async (req, res) => {
 
 app.post('/api/contact', smallJson, rateLimit(5), (req, res) => {
   const b = req.body || {};
-  const entry = { type: b.type === 'partner' ? 'partner' : 'contact', name: clean(b.name, 80), phone: clean(b.phone, 20).replace(/[\s.-]/g, ''), email: clean(b.email, 120),
+  const entry = { type: ['partner', 'event'].includes(b.type) ? b.type : 'contact', event: b.type === 'event' ? clean(b.event, 160) : undefined, name: clean(b.name, 80), phone: clean(b.phone, 20).replace(/[\s.-]/g, ''), email: clean(b.email, 120),
     company: clean(b.company, 120), bizType: clean(b.bizType, 80), province: clean(b.province, 80), product: clean(b.product, 80), message: clean(b.message, 1000), createdAt: new Date().toISOString() };
   const errors = {};
   if (entry.name.length < 2) errors.name = 'Vui lòng nhập họ tên.';
@@ -141,7 +154,7 @@ async function notifyTelegram(order, contact) {
     ? `🛒 Đơn mới ${order.code}\n${order.customer.name} - ${order.customer.phone}\n${order.customer.address}, ${order.customer.province}\n` +
       order.items.map(i => `• ${i.name} ${i.colorName}${i.size ? ' S' + i.size : ''} x${i.qty}`).join('\n') +
       `\nTổng: ${views.vnd(order.total)} (${order.payment === 'bank' ? 'CK' : 'COD'})`
-    : `${contact.type === 'partner' ? '🤝 Đăng ký đối tác' : '📩 Yêu cầu tư vấn'}\n${contact.name} - ${contact.phone} ${contact.email}\n${[contact.company, contact.bizType, contact.province, contact.product].filter(Boolean).join(' · ')}\n${contact.message}`;
+    : `${contact.type === 'partner' ? '🤝 Đăng ký đối tác' : contact.type === 'event' ? '🎟 Đăng ký sự kiện: ' + contact.event : '📩 Yêu cầu tư vấn'}\n${contact.name} - ${contact.phone} ${contact.email}\n${[contact.company, contact.bizType, contact.province, contact.product].filter(Boolean).join(' · ')}\n${contact.message}`;
   await fetch(`https://api.telegram.org/bot${token}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatId, text }) });
 }
 
@@ -192,8 +205,12 @@ app.get('/admin/preview', (req, res) => {
   const m = p.match(/^\/san-pham\/([^/]+)$/);
   const prod = m && findProduct(c, m[1]);
   if (prod) return html(res, views.productPage(c, prod, { preview: true }));
+  const pm = p.match(/^\/tin-tuc\/([^/]+)$/), em = p.match(/^\/su-kien\/([^/]+)$/);
+  const post = pm && findPost(c, pm[1], true), ev = em && findEvent(c, em[1], true);
+  if (post) return html(res, views.postPage(c, post, { preview: true, views: viewCounts }));
+  if (ev) return html(res, views.eventPage(c, ev, { preview: true }));
   const pg = findPage(c, p);
-  if (pg) return html(res, views.page(c, pg, { preview: true }));
+  if (pg) return html(res, views.page(c, pg, { preview: true, views: viewCounts }));
   html(res, views.notFound(c, 'Trang này không có trong bản nháp', `Đường dẫn ${p} chưa có trang nào.`), 404);
 });
 
@@ -254,6 +271,16 @@ app.get('/admin/orders.csv', (req, res) => {
 });
 
 /* ---------- Trang nội dung (dựng từ khối) ---------- */
+app.get('/tin-tuc/:slug', (req, res, next) => {
+  const c = live(), p = findPost(c, req.params.slug);
+  if (!p) return next();
+  countView(req, p.slug);
+  html(res, views.postPage(c, p, { views: viewCounts }));
+});
+app.get('/su-kien/:slug', (req, res, next) => {
+  const c = live(), e = findEvent(c, req.params.slug);
+  return e ? html(res, views.eventPage(c, e)) : next();
+});
 app.get('/san-pham/:slug', (req, res, next) => {
   const c = live(), p = findProduct(c, req.params.slug);
   return p ? html(res, views.productPage(c, p)) : next();
@@ -264,7 +291,7 @@ app.get('*', (req, res, next) => {
   const pg = findPage(c, p);
   if (!pg) return next();
   if (req.path !== p && req.path !== '/') return res.redirect(301, p);
-  html(res, views.page(c, pg));
+  html(res, views.page(c, pg, { views: viewCounts }));
 });
 
 app.use((req, res) => html(res, views.notFound(live()), 404));

@@ -90,6 +90,28 @@
     go(0); start();
   }
 
+  /* ---------------- Lọc chuyên mục (sự kiện, bài viết) ---------------- */
+  $$('.filter-chips').forEach(function (bar) {
+    var grid = bar.nextElementSibling;
+    if (!grid || !grid.hasAttribute('data-filterable')) return;
+    $$('[data-filter]', bar).forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var f = btn.getAttribute('data-filter');
+        $$('[data-filter]', bar).forEach(function (b) { b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'); });
+        Array.prototype.forEach.call(grid.children, function (c) { c.hidden = !!f && c.getAttribute('data-cat') !== f; });
+      });
+    });
+  });
+
+  /* ---------------- Băng chuyền bài viết ---------------- */
+  $$('[data-rail]').forEach(function (rail) {
+    var track = $('.rail-track', rail), prev = $('[data-rail-prev]', rail), next = $('[data-rail-next]', rail);
+    function upd() { prev.disabled = track.scrollLeft < 8; next.disabled = track.scrollLeft + track.clientWidth > track.scrollWidth - 8; }
+    function go(d) { track.scrollBy({ left: d * track.clientWidth * 0.9, behavior: reduceMotion ? 'auto' : 'smooth' }); }
+    prev.addEventListener('click', function () { go(-1); }); next.addEventListener('click', function () { go(1); });
+    track.addEventListener('scroll', upd, { passive: true }); window.addEventListener('resize', upd); upd();
+  });
+
   /* ---------------- Quick add (cards) ---------------- */
   $$('[data-quick-add]').forEach(function (b) {
     b.addEventListener('click', function () {
