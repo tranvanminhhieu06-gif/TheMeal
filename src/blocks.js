@@ -26,7 +26,55 @@ const L = h => esc(href(String(h || '').replace(/\{(hotline|hotlineRaw|email)\}/
 const ext = h => (/^https?:/i.test(String(h || '')) ? ' target="_blank" rel="noopener"' : '');
 const IMG = s => esc(media(s));
 const list = a => (Array.isArray(a) ? a : []);
-const ICONS = 'youtube tiktok threads handshake building dumbbell pill leaf book file headset layers hourglass repeat heart droplet moon activity footprints thermometer sparkles clock cart phone check checkCircle shield truck refresh arrow mail pin globe facebook battery waves scale users bone gauge alert star bluetooth chip ruler package bell news'.split(' ');
+const ICONS = 'youtube tiktok threads handshake building dumbbell pill leaf book file headset layers hourglass repeat heart droplet moon activity footprints thermometer sparkles clock cart phone check checkCircle shield truck refresh arrow mail pin globe facebook battery waves scale users bone gauge alert star bluetooth chip ruler package bell news zalo calendar eye gift'.split(' ');
+let VIEWS = {};                   // lượt xem bài viết (data/views.json)
+const useViews = v => { VIEWS = v || {}; };
+
+// Ngày dạng "Thứ Bảy, 12/10/2026" từ "2026-10-12"
+const WD = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+function dateVi(s, withDay = true) {
+  const m = String(s || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return T(s);
+  const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+  return `${withDay ? WD[d.getUTCDay()] + ', ' : ''}${m[3]}/${m[2]}/${m[1]}`;
+}
+const slugOf = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/gi, 'd').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+// Ảnh bìa: ảnh thật, hoặc hoạ tiết màu khi chưa có ảnh
+const cover = (src, alt, cls) => (src ? `<img src="${IMG(src)}" alt="${esc(alt || '')}" loading="lazy">` : `<span class="art ${cls || ''}" aria-hidden="true"><i></i><i></i><i></i></span>`);
+const filterChips = cats => (cats.length > 1 ? `<div class="filter-chips" role="group" aria-label="Lọc theo chuyên mục"><button type="button" data-filter="" aria-pressed="true">Tất cả</button>${cats.map(c => `<button type="button" data-filter="${esc(slugOf(c))}" aria-pressed="false">${T(c)}</button>`).join('')}</div>` : '');
+
+function eventCard(e) {
+  const free = !(Number(e.price) > 0);
+  const url = u('/su-kien/' + e.slug);
+  return `<article class="ev-card reveal" data-cat="${esc(slugOf(e.category))}">
+    <a class="ev-media" href="${url}" tabindex="-1" aria-hidden="true">${cover(e.image, '', 'art-' + (slugOf(e.category).length % 3))}
+      ${e.featured ? '<span class="ev-badge hot">Nổi bật</span>' : (e.category ? `<span class="ev-badge">${T(e.category)}</span>` : '')}
+      ${free ? '<span class="ev-free">Miễn phí</span>' : ''}</a>
+    <div class="ev-body">
+      <h3><a href="${url}">${T(e.title)}</a></h3>
+      <p class="ev-meta">${e.date ? `<span>${icon('calendar')} ${dateVi(e.date)}</span>` : ''}${e.duration ? `<span>${icon('clock')} ${T(e.duration)}</span>` : ''}</p>
+      ${e.excerpt ? `<p class="ev-text">${T(e.excerpt)}</p>` : ''}
+      <div class="ev-foot"><span class="ev-price">${free ? 'Miễn phí' : vnd(e.price)}${!free && e.priceUnit ? ` <small>${T(e.priceUnit)}</small>` : ''}</span>
+        <a class="ev-go" href="${url}" aria-label="Xem chi tiết ${esc(e.title)}">${icon('arrow')}</a></div>
+    </div>
+  </article>`;
+}
+
+function postCard(p, detailed) {
+  const url = u('/tin-tuc/' + p.slug);
+  const views = VIEWS[p.slug] || 0;
+  return `<article class="post-card reveal" data-cat="${esc(slugOf(p.category))}">
+    <a class="post-media" href="${url}" tabindex="-1" aria-hidden="true">${cover(p.cover, '', 'art-' + (slugOf(p.category).length % 3))}</a>
+    <div class="post-body">
+      ${detailed && p.category ? `<span class="post-cat">${T(p.category)}</span>` : ''}
+      <h3><a href="${url}" title="${esc(p.title)}">${T(p.title)}</a></h3>
+      ${detailed && p.excerpt ? `<p class="post-ex">${T(p.excerpt)}</p>` : ''}
+      <p class="post-meta">${p.author ? `<span>bởi <b>${T(p.author)}</b></span>` : `<span>${dateVi(p.date, false)}</span>`}<span class="post-views" title="Lượt xem">${icon('eye')} ${views.toLocaleString('vi-VN')}</span></p>
+    </div>
+  </article>`;
+}
+const byDateDesc = (a, b) => String(b.date || '').localeCompare(String(a.date || ''));
+const published = arr => list(arr).filter(x => x && !x.hidden);
 
 function buttons(items, cls = 'hero-ctas') {
   const html = list(items).filter(b => b && (b.label || b.icon)).map(b => {
@@ -46,7 +94,7 @@ function head(b, tag = 'h2') {
   return `<div class="sec-head${b.align === 'center' ? ' center' : ''}">
       ${b.eyebrow ? `<span class="eyebrow">${T(b.eyebrow)}</span>` : ''}
       ${b.title ? `<${tag} class="h2">${HL(b.title)}</${tag}>` : ''}
-      ${b.lead ? `<p class="lead">${T(b.lead)}</p>` : ''}
+      ${b.lead ? `<p class="lead">${T(b.lead).replace(/\n/g, '<br>')}</p>` : ''}
     </div>`;
 }
 
@@ -162,6 +210,10 @@ const TYPES = {
         F.eyebrow, F.title, F.lead,
         { key: 'note', label: 'Ghi chú cạnh giá', type: 'text' },
         { key: 'image', label: 'Ảnh', type: 'image', hint: 'Để trống để dùng ảnh sản phẩm.' },
+        { key: 'community', label: 'Dòng mời cộng đồng (tuỳ chọn)', type: 'text', hint: 'VD: Tham gia cộng đồng và kết nối… — hiện kèm các nút biểu tượng bên dưới.' },
+        { key: 'communityLinks', label: 'Nút cộng đồng (Zalo, Facebook…)', type: 'list', itemLabel: 'label', max: 4, fields: [
+          { key: 'icon', label: 'Biểu tượng', type: 'icon' }, { key: 'label', label: 'Tên (cho người khiếm thị)', type: 'text' }, { key: 'url', label: 'Link', type: 'link' }],
+          newItem: { icon: 'zalo', label: 'Nhóm Zalo', url: 'https://zalo.me/' } },
         F.buttons,
         { key: 'chips', label: 'Nhãn nổi quanh ảnh (tối đa 3)', type: 'list', itemLabel: 'title', max: 3, fields: [
           { key: 'icon', label: 'Biểu tượng', type: 'icon' }, { key: 'title', label: 'Chữ đậm', type: 'text' }, { key: 'text', label: 'Chữ nhỏ', type: 'text' }],
@@ -183,9 +235,10 @@ const TYPES = {
     <div class="wrap">
       <div>
         ${s.eyebrow ? `<span class="eyebrow">${T(s.eyebrow)}</span>` : ''}
-        <${h} class="h-display">${HL(s.title)}</${h}>
+        <${h} class="h-display${String(s.title || '').replace(/\*/g, '').length > 44 ? ' long' : ''}">${HL(s.title)}</${h}>
         ${s.lead ? `<p class="lead">${T(s.lead)}</p>` : ''}
         ${p ? `<div class="price-row"><span class="price">${vnd(p.price)}</span><span class="price-note">${T(s.note)}</span></div>` : (s.note ? `<p class="price-note">${T(s.note)}</p>` : '')}
+        ${s.community || list(s.communityLinks).length ? `<div class="hero-community">${s.community ? `<span>${T(s.community)}</span>` : ''}${list(s.communityLinks).filter(x => x.url).map(x => `<a class="hc-link hc-${esc(x.icon)}" href="${L(x.url)}"${ext(x.url)} aria-label="${esc(x.label || x.icon)}">${icon(x.icon)}</a>`).join('')}</div>` : ''}
         ${buttons(s.buttons)}
         ${list(b.trust).length ? `<div class="trust-mini">${list(b.trust).map(t => `<span>${icon(t.icon)} ${T(t.text)}</span>`).join('')}</div>` : ''}
       </div>
@@ -204,6 +257,57 @@ const TYPES = {
     ${slides.map((s, i) => `<button class="dot" data-go="${i}" aria-label="Xem slide ${i + 1}"${i === 0 ? ' aria-current="true"' : ''}></button>`).join('')}
   </div>` : ''}
 </section>`;
+    }
+  },
+
+  events: {
+    label: 'Sự kiện / chương trình', desc: 'Thẻ chương trình có ảnh, ngày, thời lượng, giá (hoặc nhãn Miễn phí) và nút lọc chuyên mục. Sửa danh sách ở tab Sự kiện.', section: true,
+    fields: [...HEAD,
+      { key: 'filter', label: 'Hiện nút lọc theo chuyên mục', type: 'bool' },
+      { key: 'upcoming', label: 'Chỉ hiện sự kiện chưa diễn ra', type: 'bool' },
+      { key: 'limit', label: 'Số sự kiện tối đa (0 = tất cả)', type: 'number', min: 0 },
+      { key: 'columns', label: 'Số cột', type: 'select', options: [['2', '2 cột'], ['3', '3 cột'], ['4', '4 cột']] },
+      { key: 'emptyText', label: 'Chữ khi chưa có sự kiện', type: 'text' },
+      F.buttons],
+    make: () => ({ align: 'center', eyebrow: '', title: 'Chọn chương trình *phù hợp*', lead: '', filter: true, upcoming: false, limit: 0, columns: '3', emptyText: 'Chương trình mới đang được cập nhật.', buttons: [] }),
+    render(b) {
+      const today = new Date().toISOString().slice(0, 10);
+      let evs = published(C.events).slice().sort((a, c) => String(a.date || '9').localeCompare(String(c.date || '9')));
+      if (b.upcoming) evs = evs.filter(e => !e.date || e.date >= today);
+      if (Number(b.limit) > 0) evs = evs.slice(0, Number(b.limit));
+      const cols = ['2', '3', '4'].includes(String(b.columns)) ? b.columns : '3';
+      const cats = [...new Set(evs.map(e => e.category).filter(Boolean))];
+      const body = evs.length
+        ? `${b.filter ? filterChips(cats) : ''}<div class="grid g-${cols}" data-filterable>${evs.map(eventCard).join('')}</div>`
+        : `<div class="empty">${icon('calendar')}<p class="muted">${T(b.emptyText || 'Chương trình mới đang được cập nhật.')}</p></div>`;
+      return section(b, `${head(b)}${body}${buttons(b.buttons, 'hero-ctas center-ctas')}`);
+    }
+  },
+
+  posts: {
+    label: 'Bài viết / tin tức', desc: 'Danh sách bài viết dạng băng chuyền ngang hoặc lưới, có lượt xem. Sửa bài ở tab Bài viết.', section: true,
+    fields: [...HEAD,
+      { key: 'style', label: 'Kiểu hiển thị', type: 'select', options: [['carousel', 'Băng chuyền ngang (trang chủ)'], ['grid', 'Lưới có mô tả (trang Tin tức)']] },
+      { key: 'category', label: 'Chỉ hiện chuyên mục', type: 'text', hint: 'Để trống để hiện mọi chuyên mục.' },
+      { key: 'filter', label: 'Hiện nút lọc theo chuyên mục', type: 'bool' },
+      { key: 'limit', label: 'Số bài tối đa (0 = tất cả)', type: 'number', min: 0 },
+      { key: 'moreLabel', label: 'Chữ nút "Xem thêm"', type: 'text' }, { key: 'moreHref', label: 'Liên kết nút "Xem thêm"', type: 'link' },
+      { key: 'emptyText', label: 'Chữ khi chưa có bài', type: 'text' }],
+    make: () => ({ align: 'left', eyebrow: '', title: 'Thông tin *bổ ích*', lead: '', style: 'carousel', category: '', filter: false, limit: 8, moreLabel: 'Xem thêm', moreHref: '/tin-tuc', emptyText: 'Bài viết đang được chuẩn bị.' }),
+    render(b) {
+      let ps = published(C.posts).slice().sort(byDateDesc);
+      if (b.category) ps = ps.filter(p => slugOf(p.category) === slugOf(b.category));
+      if (Number(b.limit) > 0) ps = ps.slice(0, Number(b.limit));
+      if (!ps.length) return section(b, `${head(b)}<div class="empty">${icon('news')}<p class="muted">${T(b.emptyText || 'Bài viết đang được chuẩn bị.')}</p></div>`);
+      const more = b.moreLabel && b.moreHref ? `<a class="btn btn-primary rail-more" href="${L(b.moreHref)}">${T(b.moreLabel)} ${icon('chevronRight')}</a>` : '';
+      if (b.style === 'carousel') {
+        return section(b, `<div class="rail-head">${head({ ...b, align: 'left' }) || '<span></span>'}${more}</div>
+      <div class="rail" data-rail><button type="button" class="rail-btn prev" data-rail-prev aria-label="Bài trước">${icon('chevronLeft')}</button>
+        <div class="rail-track">${ps.map(p => postCard(p, false)).join('')}</div>
+        <button type="button" class="rail-btn next" data-rail-next aria-label="Bài tiếp">${icon('chevronRight')}</button></div>`);
+      }
+      const cats = [...new Set(ps.map(p => p.category).filter(Boolean))];
+      return section(b, `${head(b)}${b.filter ? filterChips(cats) : ''}<div class="grid g-3" data-filterable>${ps.map(p => postCard(p, true)).join('')}</div>${more ? `<div class="hero-ctas center-ctas">${more}</div>` : ''}`);
     }
   },
 
@@ -562,6 +666,28 @@ const SIZE_FIELDS = [
   { key: 'rows', label: 'Bảng quy đổi', type: 'list', itemLabel: 'size', fields: [{ key: 'size', label: 'Size', type: 'text' }, { key: 'diameter', label: 'Đường kính trong (mm)', type: 'text' }, { key: 'circumference', label: 'Chu vi ngón tay (mm)', type: 'text' }], newItem: { size: '', diameter: '', circumference: '' } },
   { key: 'note', label: 'Ghi chú dưới bảng', type: 'textarea' }
 ];
+const POST_FIELDS = [
+  { key: 'title', label: 'Tiêu đề bài viết', type: 'text' },
+  { key: 'slug', label: 'Đường dẫn (/tin-tuc/…)', type: 'text', hint: 'Chữ thường không dấu, số, gạch nối.' },
+  { key: 'category', label: 'Chuyên mục', type: 'text', hint: 'VD: Sống chủ động, Dinh dưỡng, Thiết bị. Bài cùng chuyên mục được lọc chung.' },
+  { key: 'author', label: 'Tác giả', type: 'text' }, { key: 'date', label: 'Ngày đăng (YYYY-MM-DD)', type: 'text' },
+  { key: 'cover', label: 'Ảnh bìa', type: 'image', hint: 'Để trống sẽ hiện hoạ tiết màu.' },
+  { key: 'excerpt', label: 'Tóm tắt (hiện trên thẻ & Google)', type: 'textarea' },
+  { key: 'hidden', label: 'Ẩn bài (chưa xuất bản)', type: 'bool' }
+];
+const EVENT_FIELDS = [
+  { key: 'title', label: 'Tên chương trình', type: 'text' },
+  { key: 'slug', label: 'Đường dẫn (/su-kien/…)', type: 'text', hint: 'Chữ thường không dấu, số, gạch nối.' },
+  { key: 'category', label: 'Chuyên mục (VD: Thư giãn, Dinh dưỡng, Vận động)', type: 'text' },
+  { key: 'date', label: 'Ngày diễn ra (YYYY-MM-DD)', type: 'text' }, { key: 'time', label: 'Giờ (VD: 08:00 – 10:30)', type: 'text' },
+  { key: 'duration', label: 'Thời lượng (VD: 2,5 giờ)', type: 'text' }, { key: 'location', label: 'Địa điểm', type: 'text' },
+  { key: 'price', label: 'Giá (đồng) — để 0 là Miễn phí', type: 'number', min: 0 }, { key: 'priceUnit', label: 'Đơn vị giá (VD: / người)', type: 'text' },
+  { key: 'image', label: 'Ảnh', type: 'image', hint: 'Để trống sẽ hiện hoạ tiết màu.' },
+  { key: 'excerpt', label: 'Mô tả ngắn (hiện trên thẻ)', type: 'textarea' },
+  { key: 'featured', label: 'Gắn nhãn "Nổi bật"', type: 'bool' },
+  { key: 'registerUrl', label: 'Link đăng ký ngoài (tuỳ chọn)', type: 'link', hint: 'VD: link nhóm Zalo. Để trống sẽ dùng form đăng ký trên trang (vào mục Liên hệ trong quản trị).' },
+  { key: 'hidden', label: 'Ẩn chương trình', type: 'bool' }
+];
 const THEME_FIELDS = [
   { key: 'primary', label: 'Màu chính (nút bấm, điểm nhấn)', type: 'color' },
   { key: 'primaryInk', label: 'Màu chữ nhấn trên nền sáng', type: 'color', hint: 'Nên đậm hơn màu chính để chữ dễ đọc.' },
@@ -573,9 +699,9 @@ const THEME_FIELDS = [
 function schema() {
   return {
     blocks: Object.fromEntries(Object.entries(TYPES).map(([k, t]) => [k, { label: t.label, desc: t.desc, section: t.section, fields: t.section ? [...t.fields, ...SECTION_FIELDS] : t.fields, make: t.make() }])),
-    product: PRODUCT_FIELDS, page: PAGE_FIELDS, site: SITE_FIELDS, sizeGuide: SIZE_FIELDS, theme: THEME_FIELDS,
+    product: PRODUCT_FIELDS, post: POST_FIELDS, event: EVENT_FIELDS, page: PAGE_FIELDS, site: SITE_FIELDS, sizeGuide: SIZE_FIELDS, theme: THEME_FIELDS,
     icons: ICONS
   };
 }
 
-module.exports = { use, content, TYPES, renderBlocks, schema, productCard, sizeGuideHtml, sizesOf, productOf, T, HL, RICH, L, IMG, buttons, rawPhone, list, channelList };
+module.exports = { use, useViews, eventCard, postCard, dateVi, slugOf, published, byDateDesc, content, TYPES, renderBlocks, schema, productCard, sizeGuideHtml, sizesOf, productOf, T, HL, RICH, L, IMG, buttons, rawPhone, list, channelList };

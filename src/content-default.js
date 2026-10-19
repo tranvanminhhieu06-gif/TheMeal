@@ -47,6 +47,8 @@ const PENDING = '<p>Nội dung chính sách đang được cập nhật.</p><p>T
 
 module.exports = () => ({
   version: 1,
+  posts: [],      // Bài viết: thêm trong trang quản trị, tab Bài viết
+  events: [],     // Sự kiện: thêm trong trang quản trị, tab Sự kiện
   theme: { primary: '#4BCE97', primaryInk: '#147A56', dark: '#0B1C3A', bg: '#FAF9F6' },
   site: {
     name: cfg.siteName,
@@ -59,8 +61,8 @@ module.exports = () => ({
       { icon: 'shield', text: 'Chứng nhận CE · FCC · RoHS', linkText: '', href: '' }
     ],
     nav: [
-      { label: 'Trang chủ', href: '/' }, { label: 'Sản phẩm', href: '/san-pham' }, { label: 'App the Meal', href: '/#he-sinh-thai' },
-      { label: 'Hợp tác đại lý', href: '/hop-tac' }, { label: 'Tin tức', href: '/tin-tuc' }, { label: 'Liên hệ', href: '/lien-he' }
+      { label: 'Trang chủ', href: '/' }, { label: 'Sự kiện', href: '/su-kien' }, { label: 'Sản phẩm', href: '/san-pham' },
+      { label: 'Hợp tác', href: '/hop-tac' }, { label: 'Tin tức', href: '/tin-tuc' }, { label: 'Liên hệ', href: '/lien-he' }
     ],
     headerCta: { label: 'Mua ngay', href: '/san-pham' },
     company: {
@@ -71,7 +73,7 @@ module.exports = () => ({
     communities: C.communities.map(s => ({ icon: s.icon, label: s.label, url: s.url, note: s.note || '' })),
     footer: {
       about: 'Hệ sinh thái chăm sóc sức khoẻ chủ động & toàn diện dành cho người Việt — ăn đúng, vận động đủ, ngủ sâu và sống khoẻ mỗi ngày.',
-      productLinks: [{ label: 'Hướng dẫn chọn size', href: '/#chon-size' }, { label: 'Hợp tác đại lý', href: '/hop-tac' }],
+      productLinks: [{ label: 'Hướng dẫn chọn size', href: '/san-pham/meal-ring-active#tab-size' }, { label: 'Hợp tác đại lý', href: '/hop-tac' }],
       policyLinks: [
         { label: 'Chính sách bảo hành', href: '/chinh-sach/bao-hanh' }, { label: 'Đổi trả & đổi size', href: '/chinh-sach/doi-tra' },
         { label: 'Vận chuyển & giao nhận', href: '/chinh-sach/van-chuyen' }, { label: 'Hình thức thanh toán', href: '/chinh-sach/thanh-toan' },
@@ -101,6 +103,14 @@ module.exports = () => ({
         {
           id: 'home-hero', type: 'hero',
           slides: [
+            { theme: 'cream', productId: '', eyebrow: 'Sống chủ động - Sống thông minh', title: 'Kiến tạo cuộc sống toàn diện, *bắt đầu từ sự chủ động*',
+              lead: 'Cuộc sống khỏe mạnh từ thể chất, tinh thần, các mối quan hệ và tài chính chưa bao giờ là ngẫu nhiên. Đó là thành quả của tư duy chủ động và những phương pháp thông minh, giúp tối ưu hóa thời gian và năng lượng sống.',
+              note: '', image: '/img/life-badminton.webp', // TODO: thay bằng ảnh DSC_1224.JPG khi có tệp
+              community: 'Tham gia cộng đồng và kết nối với những người bạn cùng trí hướng',
+              communityLinks: [{ icon: 'zalo', label: 'Nhóm Zalo cộng đồng', url: 'https://zalo.me/g/xbgvrzoosauyjgumkjsb' }, { icon: 'facebook', label: 'Nhóm Facebook cộng đồng', url: 'https://www.facebook.com/groups/phinfit' }],
+              // TODO: nút quà tặng tạm dẫn vào nhóm Zalo, chờ chốt nơi nhận quà
+              buttons: [btn('Nhận quà tặng miễn phí', 'https://zalo.me/g/xbgvrzoosauyjgumkjsb', 'primary', 'gift')],
+              chips: [{ icon: 'sparkles', title: 'Chủ động', text: 'Cá nhân hóa' }, { icon: 'gauge', title: 'Thông Minh', text: 'Giải pháp tối ưu' }, { icon: 'users', title: 'Đồng Hành', text: 'Cùng phát triển' }] },
             { theme: 'cream', productId: 'meal-ring-active', eyebrow: 'Meal Ring Active · Nhẫn thông minh', title: 'Hiểu cơ thể mình, *ngay trên ngón tay.*',
               lead: 'Đo nhịp tim, SpO₂, giấc ngủ, HRV và thân nhiệt liên tục 24/7 — nặng chỉ 2.7g, chống nước 5ATM, pin 5–7 ngày.', note: 'Size 7–12 · Đen / Bạc', image: '',
               buttons: [btn('Mua Meal Ring Active', '/san-pham/meal-ring-active', 'primary', 'arrow'), btn('Xem thông số', '/san-pham/meal-ring-active#thong-tin', 'link')],
@@ -117,23 +127,18 @@ module.exports = () => ({
           trust: [{ icon: 'shield', text: 'CE · FCC · RoHS' }, { icon: 'package', text: 'Thanh toán COD' }, { icon: 'phone', text: 'Tư vấn {hotline}' }]
         },
         { id: 'home-trust', type: 'trust', items: [
-          { icon: 'shield', title: 'Chứng nhận quốc tế', text: 'CE-RED · FCC · RoHS' }, { icon: 'sparkles', title: 'AI the Meal', text: 'Gợi ý cá nhân hoá mỗi ngày' },
-          { icon: 'package', title: 'Thanh toán COD', text: 'Nhận hàng rồi trả tiền' }, { icon: 'phone', title: 'Tư vấn tận tâm', text: 'Hotline {hotline}' }] },
+          { icon: 'sparkles', title: 'Sống Chủ Động', text: 'Cá nhân hóa lộ trình' }, { icon: 'gauge', title: 'Sống Thông Minh', text: 'Giải pháp chất lượng, tối ưu' },
+          { icon: 'users', title: 'Sống Đồng Hành', text: 'Kết nối uy tín, cùng phát triển' }, { icon: 'phone', title: 'Hỗ trợ chuyên sâu', text: 'Hotline {hotline}' }] },
         { id: 'home-pain', type: 'features', bg: 'white', anchor: 'van-de', align: 'center', style: 'pain', columns: 3,
-          eyebrow: 'Dành cho người bận rộn', title: 'Muốn sống khoẻ chủ động, *nhưng không có thời gian?*',
-          lead: 'Eat clean, tập gym, yoga, chạy bộ… bạn đã cố gắng. the.Meal giúp mọi nỗ lực đó được đo lường, được đồng hành và có cơ sở khoa học.',
+          eyebrow: 'Dành cho người bận rộn', title: 'Muốn sống khỏe chủ động, *nhưng không có thời gian?*',
+          lead: 'Bạn đang cố gắng cải thiện sức khỏe qua eat clean, gym, yoga, chạy bộ,...?\nThiết bị thông minh 5.0 giúp mọi nỗ lực đó được đo lường, được đồng hành và có cơ sở khoa học.',
           items: [
-            { icon: 'hourglass', seal: '', title: 'Không có thời gian theo dõi cơ thể', text: 'Lịch làm việc kín, khó ghi chép giấc ngủ, vận động, cân nặng mỗi ngày.', fix: 'Nhẫn đo tự động 24/7, cân đọc 40+ chỉ số trong một bước — mọi thứ tự đồng bộ về app, không cần nhập tay.' },
-            { icon: 'repeat', seal: '', title: 'Thử nhiều cách nhưng dễ bỏ cuộc', text: 'Thiếu người đồng hành nên khó duy trì thói quen lâu dài.', fix: 'App the Meal gợi ý micro-habit mỗi tuần, đo lại kết quả và cập nhật Điểm Sức Khoẻ để bạn thấy mình tiến bộ.' },
-            { icon: 'book', seal: '', title: 'Thiếu kiến thức khoa học', text: 'Thông tin trên mạng nhiều nhưng khó biết điều gì đúng với cơ thể mình.', fix: 'AI diễn giải chỉ số thành lời khuyên dễ hiểu, cùng kho kiến thức dinh dưỡng & thể chất từ cộng đồng the Meal.' }] },
+            { icon: 'hourglass', seal: '', title: 'Không có thời gian theo dõi cơ thể', text: 'Lịch làm việc kín, khó ghi chép bữa ăn, giấc ngủ, vận động, chỉ số cơ thể mỗi ngày.', fix: 'Nhẫn đo tự động 24/7, cân đọc 40+ chỉ số, chụp ảnh bữa ăn AI tự động phân tích - mọi thứ được đồng bộ về app, không cần nhập tay.' },
+            { icon: 'repeat', seal: '', title: 'Thử nhiều cách nhưng dễ bỏ cuộc', text: 'Thiếu người đồng hành nên khó duy trì thói quen lâu dài', fix: 'Cộng đồng với đội ngũ chuyên gia, bạn cùng trí hướng chia sẻ và kết nối mỗi ngày. App gợi ý và cập nhật điểm sức khỏe để bạn thấy mình tiến bộ.' },
+            { icon: 'book', seal: '', title: 'Quá tải thông tin', text: 'Thông tin trên mạng nhiều nhưng chưa biết điều gì dành cho cơ thể mình.', fix: 'Đội ngũ chuyên gia đồng hành chuyên môn sâu, AI diễn giải chỉ số dễ hiểu, lọc nhiễu thông tin, kho kiến thức được cập nhật chính thống và mới nhất.' }] },
         { id: 'home-products', type: 'products', anchor: 'san-pham', align: 'center', columns: 3, productIds: [],
           eyebrow: 'Hệ sinh thái thiết bị the.Meal', title: 'Chọn thiết bị *phù hợp với bạn*',
-          lead: 'Hai dòng nhẫn thông minh theo dõi 24/7 và một chiếc cân phân tích thành phần cơ thể — cùng chuẩn hoá dữ liệu trên một ứng dụng duy nhất.' },
-        { id: 'home-metrics', type: 'mediaText', bg: 'white', anchor: 'chi-so', side: 'right',
-          eyebrow: 'Meal Ring theo dõi 24/7', title: '6 chỉ số quan trọng, *đo tự động không bỏ sót.*',
-          lead: 'Chỉ cần đeo nhẫn — Meal Ring ghi nhận liên tục cả ngày lẫn đêm và đồng bộ về app, không cần nhập tay.',
-          listStyle: 'numbered', listPlace: 'text', list: P['meal-ring-active-pro'].metrics.map(m => ({ icon: '', title: m.title, text: m.text, href: '' })),
-          mediaType: 'video', image: '', video: '/img/ring-measure.mp4', poster: '/img/ring-measure-poster.jpg', images: [], mediaShape: 'tall', mediaAlt: 'Video nhẫn Meal Ring đang đo trên ngón tay', buttons: [] },
+          lead: 'Dòng nhẫn thông minh theo dõi 24/7 và chiếc cân phân tích +40 chỉ số cơ thể - cùng chuẩn hóa dữ liệu trên một ứng dụng duy nhất.' },
         { id: 'home-loop', type: 'steps', bg: 'navy', anchor: 'he-sinh-thai', align: 'center', style: 'loop',
           eyebrow: 'Ứng dụng the Meal', title: 'Một vòng lặp khép kín, *cải thiện mỗi ngày.*',
           lead: 'the Meal biến chỉ số từ thiết bị thành insight dễ hiểu và một hành động nhỏ mỗi ngày — rồi đo lại kết quả, liên tục cải thiện.',
@@ -142,10 +147,6 @@ module.exports = () => ({
             { kicker: 'Bước 2', title: 'Phân tích', text: 'AI chuẩn hoá dữ liệu thành biểu đồ trực quan và Điểm Sức Khoẻ theo ngày, tuần, tháng.' },
             { kicker: 'Bước 3', title: 'Tư vấn', text: 'Gợi ý & cảnh báo cá nhân hoá, dễ hiểu, đúng lúc bạn cần.' },
             { kicker: 'Bước 4', title: 'Hành động', text: 'Micro-habit & kế hoạch mỗi tuần, đo lại kết quả và bắt đầu chu kỳ mới.' }] },
-        { id: 'home-phones', type: 'gallery', bg: 'navy', tight: true, style: 'phones', align: 'center', eyebrow: '', title: '', lead: '',
-          images: [['app-sleep', 'Điểm giấc ngủ'], ['app-hrv', 'Biến thiên nhịp tim'], ['app-ai', 'AI đánh giá tổng quan'], ['app-next', 'Gợi ý bước tiếp theo'], ['app-spo2', 'SpO₂ trong ngày'], ['app-family', 'Sức khoẻ cả nhà']]
-            .map(([f, c]) => ({ src: `/img/${f}.webp`, caption: c, alt: `Màn hình app the Meal: ${c}` })),
-          note: 'Mọi gợi ý từ AI chỉ mang tính tham khảo, không thay thế tư vấn dinh dưỡng hoặc y khoa chuyên môn.' },
         { id: 'home-knowledge', type: 'mediaText', bg: 'white', anchor: 'kien-thuc', side: 'right',
           eyebrow: 'Thiết bị + App + Kiến thức', title: 'Không chỉ đo — *hiểu và làm đúng.*',
           lead: 'Nâng cao kiến thức dinh dưỡng và thể chất cùng các kênh nội dung và cộng đồng của the Meal: video, sách, mẹo ăn uống và nhóm thảo luận cùng hàng nghìn người cùng mục tiêu.',
@@ -153,22 +154,10 @@ module.exports = () => ({
           listStyle: 'links', listPlace: 'side',
           list: [...C.socials.filter(x => x.icon === 'youtube').map(x => ({ ...x, note: 'YouTube' })), ...C.communities].map(x => ({ icon: x.icon, title: x.label, text: x.note || '', href: x.url })),
           mediaType: 'none', image: '', video: '', poster: '', images: [], mediaShape: 'square', mediaAlt: '' },
-        { id: 'home-compare', type: 'compare', anchor: 'so-sanh', align: 'center',
-          eyebrow: 'So sánh nhanh', title: 'Active hay Active Pro?', lead: 'Cùng đo đầy đủ 6 chỉ số 24/7. Khác biệt nằm ở chất liệu, chip cảm biến và độ sâu phân tích của AI.',
-          colA: 'Meal Ring Active', colB: 'Meal Ring Active Pro',
-          rows: compareRows(),
-          linkA: { label: 'Xem Active', href: '/san-pham/meal-ring-active' }, linkB: { label: 'Xem Active Pro', href: '/san-pham/meal-ring-active-pro' } },
-        { id: 'home-scale', type: 'mediaText', bg: 'mint', anchor: 'can-thong-minh', side: 'left',
-          eyebrow: 'Meal Fit Insight · Cân thông minh', title: 'Thành phần cơ thể, *chính xác & khoa học.*', lead: P['meal-fit-insight'].summary,
-          listStyle: 'check', listPlace: 'text', list: P['meal-fit-insight'].benefits.map(b => ({ icon: '', title: b.text, text: '', href: '' })),
-          productId: 'meal-fit-insight', priceNote: 'Model CF586 · Màu đen',
-          buttons: [btn('Thêm vào giỏ', '', 'primary', 'cart', { addToCart: 'meal-fit-insight' }), btn('Xem chi tiết', '/san-pham/meal-fit-insight', 'link', 'arrow')],
-          mediaType: 'image', image: '/img/scale-stand.webp', video: '', poster: '', images: [], mediaShape: 'square', mediaAlt: 'Người dùng đứng trên cân Meal Fit Insight' },
         { id: 'home-life', type: 'gallery', style: 'mosaic', align: 'left', eyebrow: 'Nhật ký the.Meal', title: 'Đeo mọi lúc, *đo mọi nơi.*', lead: '', note: '',
           images: [['life-badminton', 'Khi chơi thể thao', 'Chơi cầu lông khi đeo nhẫn Meal Ring màu bạc'], ['life-bottle', 'Tập luyện', 'Đeo nhẫn màu đen khi tập luyện'],
             ['scale-room', 'Tại nhà', 'Đo thành phần cơ thể tại phòng khách'], ['life-wrist', 'Đi làm', 'Nhẫn màu bạc trên tay'], ['scale-handle', 'Đo 8 điện cực', 'Cầm tay cầm điện cực của cân']]
             .map(([f, caption, alt]) => ({ src: `/img/${f}.webp`, caption, alt })) },
-        { id: 'home-size', type: 'sizeGuide', bg: 'white', anchor: 'chon-size', eyebrow: 'Hướng dẫn chọn size', title: 'Đo size nhẫn tại nhà *trong 2 phút.*' },
         { id: 'home-certs', type: 'features', anchor: 'chung-nhan', align: 'center', style: 'cert', columns: 4, eyebrow: 'An tâm sử dụng', title: 'Đạt chuẩn chứng nhận quốc tế', lead: '',
           items: [['CE', 'CE-RED', 'Chứng nhận thiết bị vô tuyến đạt chuẩn để lưu hành tại châu Âu.'], ['FCC', 'FCC', 'Không gây nhiễu sóng vượt mức theo tiêu chuẩn Hoa Kỳ.'],
             ['RoHS', 'RoHS', 'Hạn chế các chất độc hại (thuỷ ngân, chì…) trong thiết bị điện tử.'], ['ISO', 'ISO 9001', 'Hệ thống quản lý chất lượng (cân Meal Fit Insight).']]
@@ -181,17 +170,6 @@ module.exports = () => ({
           buttons: [btn('Đăng ký làm đối tác', '/hop-tac', 'primary', 'arrow'), btn('Xem quyền lợi', '/hop-tac#chinh-sach', 'link')],
           listStyle: 'chips', listPlace: 'side', list: PARTNER_TYPES.map(([icon, title]) => ({ icon, title, text: '', href: '' })),
           mediaType: 'none', image: '', video: '', poster: '', images: [], mediaShape: 'square', mediaAlt: '' },
-        { id: 'home-faq', type: 'faq', anchor: 'faq', align: 'center', eyebrow: 'Câu hỏi thường gặp', title: 'Bạn còn băn khoăn?', lead: '',
-          items: [
-            ['Meal Ring Active và Active Pro khác nhau thế nào?', 'Cả hai cùng đo nhịp tim, SpO₂, giấc ngủ, HRV, nhiệt độ cơ thể và vận động 24/7. Active Pro làm từ hợp kim titan, dùng chip Nordic nRF54L15 cùng cảm biến GOODiX + 6 trục, và được AI phân tích toàn diện hơn: khuyến nghị dinh dưỡng, lối sống và cảnh báo sớm khi có dấu hiệu bất thường.'],
-            ['Nhẫn có chống nước không? Pin dùng được bao lâu?', 'Cả hai phiên bản đạt chuẩn chống nước 5ATM (~50m), có thể đeo khi rửa tay, tắm hay đi mưa. Mỗi lần sạc dùng được khoảng 5–7 ngày tuỳ tần suất đo.'],
-            ['Làm sao để chọn đúng size nhẫn?', 'Nhẫn có size 7 đến 12. Bạn có thể tự đo chu vi ngón tay bằng một dải giấy và đối chiếu bảng quy đổi ở mục <a href="/#chon-size">Hướng dẫn chọn size</a>, hoặc gọi hotline để được tư vấn.'],
-            ['Thiết bị dùng với ứng dụng nào?', 'Nhẫn Meal Ring và cân Meal Fit Insight đồng bộ qua Bluetooth với ứng dụng the Meal trên Android và iOS. Mọi chỉ số được gom về một nơi, AI chấm điểm và gợi ý hành động mỗi ngày.'],
-            ['Cả gia đình có dùng chung cân Meal Fit Insight được không?', 'Được. Cân tự bật và nhận diện người dùng, hỗ trợ nhiều thành viên. Tải trọng tối đa 180kg.'],
-            ['Kết quả đo có thay thế được thiết bị y tế không?', 'Không. Sản phẩm giúp bạn theo dõi xu hướng sức khoẻ; mọi gợi ý từ AI chỉ mang tính tham khảo, không thay thế tư vấn dinh dưỡng hoặc chẩn đoán y khoa.'],
-            ['Tôi là chủ phòng tập / nhà thuốc / cửa hàng healthy, có thể hợp tác phân phối không?', 'Có. the.Meal tìm kiếm đối tác phân phối và tích hợp giải pháp trọn gói (thiết bị + app + khoá học). Đăng ký tại trang <a href="/hop-tac">Hợp tác đại lý</a>, đội ngũ sẽ liên hệ và gửi chính sách hợp tác chi tiết.'],
-            ['Tôi có thể thanh toán bằng cách nào?', 'Bạn có thể thanh toán khi nhận hàng (COD) hoặc chuyển khoản ngân hàng. Sau khi đặt, nhân viên the.Meal sẽ gọi xác nhận đơn.']
-          ].map(([q, a]) => ({ q, a })) },
         { id: 'home-cta', type: 'cta', tight: true,
           eyebrow: 'Bắt đầu hành trình sống khoẻ', title: 'Ăn đúng, vận động đủ, ngủ sâu — *bắt đầu từ hôm nay.*',
           lead: 'Đặt hàng online, thanh toán khi nhận hàng. Nhân viên the.Meal sẽ gọi xác nhận và tư vấn size miễn phí.',
@@ -247,6 +225,12 @@ module.exports = () => ({
         { id: 'contact-head', type: 'pageHeader', crumbs: true, eyebrow: 'Liên hệ', title: 'Chúng tôi luôn sẵn sàng tư vấn',
           lead: 'Cần chọn size, so sánh sản phẩm hay mua số lượng lớn làm quà tặng doanh nghiệp? Để lại thông tin — the.Meal sẽ gọi lại cho bạn.' },
         { id: 'contact-form', type: 'contactForm', tight: true, variant: 'card', formType: 'contact', eyebrow: '', title: '', lead: '', formTitle: 'Gửi yêu cầu tư vấn', button: 'Gửi yêu cầu tư vấn' }
+      ]
+    },
+    {
+      id: 'events', path: '/su-kien', title: 'Sự kiện', desc: 'Các chương trình, workshop về thư giãn, dinh dưỡng và vận động — đăng ký tham gia trực tuyến.', blocks: [
+        { id: 'events-head', type: 'pageHeader', crumbs: true, eyebrow: 'Sự kiện & chương trình', title: 'Chọn chương trình *phù hợp*', lead: 'Workshop thư giãn, dinh dưỡng và vận động cùng đội ngũ chuyên gia và cộng đồng.' },
+        { id: 'events-list', type: 'events', tight: true, align: 'left', eyebrow: '', title: '', lead: '', filter: true, upcoming: false, limit: 0, columns: '3', emptyText: 'Chương trình mới đang được cập nhật. Vui lòng quay lại sau hoặc gọi hotline {hotline} để được thông báo sớm.', buttons: [] }
       ]
     },
     {
