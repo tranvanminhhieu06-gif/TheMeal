@@ -253,7 +253,7 @@
    * Có ORDER_ENDPOINT (bản tĩnh GitHub Pages) => POST tới Google Apps Script.
    * Không có => POST tới API của server Express. Không bao giờ báo thành công giả. */
   var ENDPOINT = window.__ORDER_ENDPOINT__ || '';
-  var HOTLINE = '0338 725 103';
+  var HOTLINE = '037 222 3059';
   function send(path, payload) {
     var req = ENDPOINT
       // text/plain để trình duyệt không gửi preflight CORS (Apps Script không hỗ trợ OPTIONS)
@@ -356,7 +356,7 @@
           '<div class="order-box"><h2 class="h3">Chi tiết đơn hàng</h2>' + itemsHtml +
           '<div class="sum-row total"><span>Tổng cộng</span><span>' + vnd(last.total) + '</span></div>' +
           '<p class="hint">Thanh toán: ' + (last.payment === 'bank' ? 'Chuyển khoản ngân hàng' : 'Thanh toán khi nhận hàng (COD)') + '</p></div>' +
-          '<div class="hero-ctas" style="justify-content:center;margin-top:28px"><a class="btn btn-primary" href="' + u('/') + '">Về trang chủ</a><a class="link" href="tel:0338725103">Cần hỗ trợ? 0338 725 103</a></div></div>';
+          '<div class="hero-ctas" style="justify-content:center;margin-top:28px"><a class="btn btn-primary" href="' + u('/') + '">Về trang chủ</a><a class="link" href="tel:0372223059">Cần hỗ trợ? 037 222 3059</a></div></div>';
       }
     } catch (e5) {}
   }

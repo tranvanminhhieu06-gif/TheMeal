@@ -15,8 +15,8 @@ module.exports = {
     name: 'Công ty Cổ phần the Meal VN',
     taxCode: env.TAX_CODE || '',                       // TODO: Mã số thuế
     address: 'Lô 12 DV09 KĐT Tây Nam Linh Đàm, phường Hoàng Liệt, Hà Nội',
-    hotline: '0338 725 103',
-    hotlineRaw: '0338725103',
+    hotline: '037 222 3059',
+    hotlineRaw: '0372223059',
     email: 'marketing@themeal.vn',
     website: 'themeal.vn',
     websiteUrl: 'https://www.themeal.vn/',
