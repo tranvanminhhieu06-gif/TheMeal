@@ -602,3 +602,5 @@ p{margin:0 0 1em}
 .h-display.long{font-size:clamp(32px,4vw,50px)}
 .slide .h-display.long+.lead{font-size:17px}
 .hero-community>span{flex-basis:100%}
+/* Khung kêu gọi cuối trang: cách khối tối phía trên ~1cm */
+.final{margin-top:38px}
