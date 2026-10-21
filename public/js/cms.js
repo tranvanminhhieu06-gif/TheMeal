@@ -637,9 +637,22 @@
           }) : el('tr', null, el('td', { colspan: '5' }, d.orders.length ? 'Không có đơn khớp bộ lọc.' : 'Chưa có đơn hàng nào.'))))));
     }).catch(function (e) { wrap.textContent = 'Không tải được đơn hàng: ' + e.message; });
   }
+  // Thông tin liên hệ hiện trên website (trang Liên hệ, chân trang, nút gọi…) — sửa ngay trong tab Liên hệ
+  var CONTACT_KEYS = ['address', 'hotline', 'email', 'facebook', 'facebookText', 'website', 'websiteUrl', 'hours', 'zalo', 'mapEmbed', 'name', 'taxCode'];
+  function contactEditor() {
+    var group = S.schema.site.filter(function (d) { return d.key === 'company'; })[0];
+    var defs = CONTACT_KEYS.map(function (k) { return group.fields.filter(function (d) { return d.key === k; })[0]; }).filter(Boolean);
+    if (!S.draft.site.company) S.draft.site.company = {};
+    return el('div', { class: 'cms-contact' },
+      el('div', { class: 'cms-editor-head' },
+        el('div', null, el('h2', null, 'Thông tin liên hệ trên website'),
+          el('p', { class: 'cms-hint' }, 'Hiện ở trang Liên hệ, chân trang, nút gọi/Zalo và các ô {hotline}, {email}. Để trống ô nào thì dòng đó được ẩn. Thay đổi tự lưu vào bản nháp — bấm "Đăng lên website" để khách thấy.')),
+        el('a', { class: 'cms-btn small', href: '/admin/preview?path=%2Flien-he', target: '_blank', rel: 'noopener' }, 'Xem trước trang Liên hệ ↗')),
+      el('div', { class: 'cms-form cms-form-2' }, defs.map(function (d) { return field(d, S.draft.site.company, 'contact'); })));
+  }
   function viewLeads(m) {
-    var wrap = el('section', { class: 'cms-page' }, el('p', { class: 'muted' }, 'Đang tải…'));
-    m.append(wrap);
+    var wrap = el('div', { class: 'cms-leads' }, el('p', { class: 'muted' }, 'Đang tải…'));
+    m.append(el('section', { class: 'cms-page' }, contactEditor(), wrap));
     loadOrders().then(function (d) {
       wrap.textContent = '';
       wrap.append(el('div', { class: 'cms-editor-head' }, el('div', null, el('h2', null, 'Yêu cầu tư vấn & đăng ký đối tác'), el('p', { class: 'cms-hint' }, d.leads.length + ' yêu cầu')),

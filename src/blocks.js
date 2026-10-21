@@ -173,7 +173,7 @@ function contactInfoList(full) {
     full && c.address && ['pin', 'Địa chỉ', T(c.address)],
     c.hotline && ['phone', full ? 'Hotline' : 'Hotline hợp tác', `<a href="tel:${esc(rawPhone(c.hotline))}">${T(c.hotline)}</a>`],
     c.email && ['mail', 'Email', `<a href="mailto:${esc(c.email)}">${T(c.email)}</a>`],
-    c.facebook && ['facebook', 'Fanpage', `<a href="${L(c.facebook)}" target="_blank" rel="noopener">${T(c.facebook.replace(/^https?:\/\/(www\.)?/, ''))}</a>`],
+    c.facebook && ['facebook', 'Fanpage', `<a href="${L(c.facebook)}" target="_blank" rel="noopener">${T(c.facebookText || c.facebook.replace(/^https?:\/\/(www\.)?/, ''))}</a>`],
     full && c.websiteUrl && ['globe', 'Website', `<a href="${L(c.websiteUrl)}" target="_blank" rel="noopener">${T(c.website || c.websiteUrl)}</a>`],
     full && c.hours && ['clock', 'Giờ làm việc', T(c.hours)]
   ].filter(Boolean);
@@ -652,6 +652,7 @@ const SITE_FIELDS = [
     { key: 'name', label: 'Tên công ty', type: 'text' }, { key: 'address', label: 'Địa chỉ', type: 'text' }, { key: 'hotline', label: 'Hotline', type: 'text' },
     { key: 'email', label: 'Email', type: 'text' }, { key: 'taxCode', label: 'Mã số thuế', type: 'text' }, { key: 'hours', label: 'Giờ làm việc', type: 'text' },
     { key: 'zalo', label: 'Link Zalo', type: 'text' }, { key: 'facebook', label: 'Link Fanpage', type: 'text' },
+    { key: 'facebookText', label: 'Fanpage (chữ hiển thị)', type: 'text', hint: 'Để trống sẽ hiện theo đường link, VD: facebook.com/themeal.vn' },
     { key: 'website', label: 'Website (chữ hiển thị)', type: 'text' }, { key: 'websiteUrl', label: 'Website (link)', type: 'text' },
     { key: 'mapEmbed', label: 'Link nhúng Google Maps', type: 'text', hint: 'Google Maps → Chia sẻ → Nhúng bản đồ → copy phần src="…".' }] },
   { key: 'socials', label: 'Mạng xã hội', type: 'list', itemLabel: 'label', fields: [{ key: 'icon', label: 'Biểu tượng', type: 'icon' }, { key: 'label', label: 'Tên', type: 'text' }, { key: 'url', label: 'Link', type: 'text' }], newItem: { icon: 'facebook', label: 'Fanpage', url: 'https://' } },

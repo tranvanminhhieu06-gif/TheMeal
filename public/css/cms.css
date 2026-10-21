@@ -121,3 +121,21 @@ body.cms .admin-table select{min-width:140px}
   .cms-block{flex-wrap:wrap}.cms-block .cms-item-tools{width:100%;justify-content:flex-end;border-top:1px solid #F3F4F6}
   .cms-block-main{flex-basis:calc(100% - 30px)}
 }
+
+/* Cột trái: không cho tên khối dài đẩy hàng rộng hơn cột (giữ nút ● ↑ ↓ ⧉ ✕ luôn thấy) */
+.cms-3col{grid-template-columns:340px minmax(360px,1fr) minmax(380px,1.15fr)}
+.cms-3col.nopv{grid-template-columns:340px 1fr 120px}
+.cms-side-sec,.cms-blocks{grid-template-columns:minmax(0,1fr)}
+.cms-block,.cms-block-main{min-width:0}
+.cms-side-sec.grow{overflow-x:hidden}
+.cms-side .cms-hint{overflow-wrap:anywhere}
+@media (max-width:1180px){.cms-3col,.cms-3col.nopv{grid-template-columns:1fr}}
+/* Tên khối chiếm cả hàng, nút công cụ nằm hàng dưới (canh phải) */
+.cms-block{flex-wrap:wrap;row-gap:0}
+.cms-block-main{flex:1 1 calc(100% - 24px)}
+.cms-block .cms-item-tools{width:100%;justify-content:flex-end;border-top:1px solid #F3F4F6;padding-top:2px}
+.cms-block-main b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Tab Liên hệ: khung sửa thông tin liên hệ phía trên danh sách yêu cầu */
+.cms-contact{background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:18px 20px;margin-bottom:28px}
+.cms-form-2{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:18px}
+@media (max-width:760px){.cms-form-2{grid-template-columns:minmax(0,1fr)}}
