@@ -90,7 +90,7 @@ ${body}
 </main>
 ${footer()}
 ${S.fab !== false ? `<div class="fab" aria-label="Liên hệ nhanh">
-  ${co().zalo ? `<a class="zalo" href="${L(co().zalo)}" target="_blank" rel="noopener" aria-label="Chat Zalo">Zalo</a>` : ''}
+  ${co().zalo ? `<a class="zalo" href="${L(co().zalo)}" target="_blank" rel="noopener" aria-label="Chat Zalo">${T(S.fabZaloLabel || 'Zalo')}</a>` : ''}
   ${co().hotline ? `<a class="call" href="tel:${esc(rawPhone(co().hotline))}" aria-label="Gọi hotline ${esc(co().hotline)}">${icon('phone')}</a>` : ''}
 </div>` : ''}
 <div class="toast" id="toast" role="status" aria-live="polite"></div>

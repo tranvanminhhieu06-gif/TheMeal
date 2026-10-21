@@ -114,7 +114,7 @@
   }
 
   /* ---------------- Khung trang ---------------- */
-  var TABS = [['pages', 'Trang & khối'], ['posts', 'Bài viết'], ['events', 'Sự kiện'], ['products', 'Sản phẩm'], ['theme', 'Màu sắc'], ['settings', 'Cài đặt chung'], ['media', 'Thư viện ảnh'], ['history', 'Lịch sử'], ['orders', 'Đơn hàng'], ['leads', 'Liên hệ']];
+  var TABS = [['pages', 'Trang & khối'], ['posts', 'Bài viết'], ['events', 'Sự kiện'], ['products', 'Sản phẩm'], ['theme', 'Màu sắc'], ['settings', 'Cài đặt chung'], ['icons', 'Nút & biểu tượng'], ['media', 'Thư viện ảnh'], ['history', 'Lịch sử'], ['orders', 'Đơn hàng'], ['leads', 'Liên hệ']];
   function render() {
     root.textContent = '';
     var tabs = el('nav', { class: 'cms-tabs', 'aria-label': 'Mục quản trị' }, TABS.map(function (t) {
@@ -142,7 +142,7 @@
     var m = document.getElementById('cmsMain'); if (!m) return;
     var keep = (m.querySelector('.cms-editor') || {}).scrollTop || 0;
     m.textContent = '';
-    ({ pages: viewPages, posts: viewPosts, events: viewEvents, products: viewProducts, theme: viewTheme, settings: viewSettings, media: viewMedia, history: viewHistory, orders: viewOrders, leads: viewLeads })[S.tab](m);
+    ({ pages: viewPages, posts: viewPosts, events: viewEvents, products: viewProducts, theme: viewTheme, settings: viewSettings, icons: viewIcons, media: viewMedia, history: viewHistory, orders: viewOrders, leads: viewLeads })[S.tab](m);
     var ed = m.querySelector('.cms-editor'); if (ed) ed.scrollTop = keep;
     fitFrame();
   }
@@ -565,6 +565,42 @@
       el('div', { class: 'cms-form' }, S.settingsPart === 'size' ? fields(S.schema.sizeGuide, S.draft.sizeGuide, 'size') : fields(S.schema.site, S.draft.site, 'site')),
       el('p', { class: 'cms-hint' }, 'Mẹo: trong mọi ô chữ có thể gõ {hotline}, {email} để tự chèn hotline/email; {gia:ma-san-pham} để chèn giá.'));
     m.append(el('div', { class: 'cms-2col' + (S.showPreview ? '' : ' nopv') }, editor, previewPane(S.settingsPart === 'size' ? '/#chon-size' : '/')));
+  }
+
+  /* ---------------- Tab: Nút & biểu tượng ---------------- */
+  // Gom các nút liên hệ: nút nổi góc màn hình (Zalo, Gọi) và biểu tượng cộng đồng trên banner trang chủ
+  function viewIcons(m) {
+    var site = S.draft.site, co = site.company || (site.company = {});
+    var fabFields = [
+      { key: 'fab', label: 'Hiện nút Zalo / Gọi nổi ở góc phải màn hình', type: 'bool' },
+      { key: 'fabZaloLabel', label: 'Chữ trên nút Zalo', type: 'text', hint: 'Để trống sẽ hiện "Zalo".' }
+    ];
+    var coFields = [
+      { key: 'zalo', label: 'Link nút Zalo', type: 'link', hint: 'VD: https://zalo.me/0372223059 (Zalo cá nhân) hoặc link Zalo OA. Để trống để ẩn nút Zalo.' },
+      { key: 'hotline', label: 'Số điện thoại nút Gọi', type: 'text', hint: 'Dùng chung với hotline toàn website (thanh trên cùng, chân trang, trang Liên hệ). Để trống để ẩn nút Gọi.' }
+    ];
+    var slideDefs = S.schema.blocks.hero.fields.filter(function (d) { return d.key === 'slides'; })[0].fields
+      .filter(function (d) { return d.key === 'community' || d.key === 'communityLinks'; });
+    var home = S.draft.pages.filter(function (p) { return p.path === '/'; })[0];
+    var heroes = home ? home.blocks.filter(function (b) { return b.type === 'hero'; }) : [];
+    var slideBoxes = [];
+    heroes.forEach(function (h) {
+      (h.slides || []).forEach(function (s, i) {
+        if (!s.community && !(s.communityLinks || []).length) return;
+        slideBoxes.push(el('fieldset', { class: 'cms-group' }, el('legend', null, 'Slide ' + (i + 1) + ': ' + String(s.eyebrow || s.title || '').replace(/\*/g, '')),
+          fields(slideDefs, s, 'icons:' + h.id + ':' + i)));
+      });
+    });
+    var editor = el('section', { class: 'cms-editor' },
+      el('div', { class: 'cms-editor-head' }, el('div', null, el('h2', null, 'Nút & biểu tượng liên hệ'),
+        el('p', { class: 'cms-hint' }, 'Sửa link và chữ của các nút liên hệ. Thay đổi tự lưu vào bản nháp — bấm "Đăng lên website" để khách thấy.'))),
+      el('h3', { class: 'cms-sub' }, 'Nút nổi góc phải màn hình'),
+      el('div', { class: 'cms-form' }, fields(fabFields, site, 'icons:fab'), fields(coFields, co, 'icons:co')),
+      el('h3', { class: 'cms-sub' }, 'Biểu tượng cộng đồng trên banner trang chủ'),
+      slideBoxes.length ? el('div', { class: 'cms-form' }, slideBoxes)
+        : el('p', { class: 'cms-hint' }, 'Chưa có slide nào có biểu tượng cộng đồng. Thêm ở Trang & khối → Banner trình chiếu → chọn slide → "Nút cộng đồng".'),
+      el('p', { class: 'cms-hint' }, 'Biểu tượng mạng xã hội ở chân trang sửa tại Cài đặt chung → Mạng xã hội.'));
+    m.append(el('div', { class: 'cms-2col' + (S.showPreview ? '' : ' nopv') }, editor, previewPane('/')));
   }
 
   /* ---------------- Tab: Thư viện ảnh ---------------- */
